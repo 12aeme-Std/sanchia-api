@@ -1,157 +1,244 @@
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
 model User {
-  id          Int        @id @default(autoincrement())
-  name        String
-  email       String     @unique
-  password    String
-  accessToken String?    @map("access_token")
-  role        UserRole   @default(ADMIN)
-  preOrder    preOrder[]
+    id          Int      @id @default(autoincrement())
+    name        String
+    lastname    String
+    email       String   @unique
+    password    String
+    accessToken String?  @map("acccess_token")
+    role        Roles    @default(SELLER)
+    createdAt   DateTime @default(now()) @map("created_at")
+    updatedAt   DateTime @updatedAt() @map("updated_at")
 
-  @@map("user")
+    cart     Cart[]
+    orders   Order[]
+    PreOrder PreOrder[]
+
+    @@map("user")
 }
 
-model Client {
-  id          Int        @id @default(autoincrement())
-  name        String
-  email       String     @unique
-  password    String
-  accessToken String?    @map("access_token")
-  role        ClientRole @default(BUYER)
-  cart        Cart[]
-  order       Order[]
-  preOrder    preOrder[]
+model ExternalUser {
+    id       Int    @id @default(autoincrement())
+    name     String
+    lastname String
+    email    String @unique
+    password String
 
-  @@map("client")
-}
+    accessToken String?       @map("acccess_token")
+    role        ExternalRoles @default(CLIENT)
+    createdAt   DateTime      @default(now()) @map("created_at")
+    updatedAt   DateTime      @updatedAt() @map("updated_at")
 
-model Cart {
-  id        Int     @id @default(autoincrement())
-  quantity  Int     @default(1)
+    cart      Cart[]
+    orders    Order[]
+    preOrders PreOrder[]
 
-  client    Client  @relation(fields: [clientId], references: [id])
-  clientId  Int     @map("client_id")
-
-  product   Product @relation(fields: [productId], references: [id])
-  productId Int     @map("product_id")
-
-  @@map("cart")
+    @@map("external_user")
 }
 
 model Product {
-  id            Int             @id @default(autoincrement())
-  name          String          @unique
-  description   String
-  price         Float
-  stock         Int
+    id          Int      @id @default(autoincrement())
+    name        String
+    description String
+    price       Float
+    stock       Int
+    createdAt   DateTime @default(now()) @map("created_at")
+    updatedAt   DateTime @updatedAt() @map("updated_at")
 
-  category      Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  categoryId    Int             @map("category_id")
+    category   Category @relation(fields: [categoryId], references: [id])
+    categoryId Int      @map("category_id")
 
-  productImages ProductImages[]
-  Cart          Cart[]
-  orderDetail   OrderDetail[]
+    images           Image[]
+    productsCarts    ProductsCarts[]
+    productsOrders   ProductsOrders[]
+    promosProducts   PromosProducts[]
+    preorderProducts PreorderProducts[]
 
-  @@map("product")
+    @@map("product")
+}
+
+model Image {
+    id Int @id @default(autoincrement())
+
+    url        String
+    isCover    Boolean  @map("is_cover")
+    uploadedAt DateTime @default(now()) @map("uploaded_at")
+
+    products  Product @relation(fields: [productId], references: [id])
+    productId Int     @map("product_id")
+
+    @@map("image")
 }
 
 model Category {
-  id      Int       @id @default(autoincrement())
-  name    String    @unique
+    id   Int    @id @default(autoincrement())
+    name String
 
-  product Product[]
+    products Product[]
 
-  @@map("category")
+    @@map("category")
 }
 
-model ProductImages {
-  id        Int     @id @default(autoincrement())
-  url       String
+model Cart {
+    id Int @id @default(autoincrement())
 
-  product   Product @relation(fields: [productId], references: [id])
-  productId Int     @map("product_id")
+    productsCarts ProductsCarts[]
 
-  @@map("product_image")
+    user   User? @relation(fields: [userId], references: [id])
+    userId Int   @map("user_id")
+
+    ExternalUser   ExternalUser? @relation(fields: [externalUserId], references: [id])
+    externalUserId Int           @map("external_user_id")
+
+    @@map("cart")
 }
 
 model Order {
-  id            Int           @id @default(autoincrement())
-  total         Float
-  totalDiscount Float         @default(0) @map("total_discount")
-  saving        Float         @default(0)
+    id    Int   @id @default(autoincrement())
+    total Float @default(0)
 
-  client        Client        @relation(fields: [clientId], references: [id])
-  clientId      Int           @map("client_id")
+    orderedAt DateTime @default(now()) @map("ordered_at")
 
-  orderDetail   OrderDetail[]
+    user   User? @relation(fields: [userId], references: [id])
+    userId Int   @map("user_id")
 
-  @@map("order")
+    productsOrders ProductsOrders[]
+
+    ExternalUser   ExternalUser? @relation(fields: [externalUserId], references: [id])
+    externalUserId Int           @map("external_user_id")
+
+    promosOrders PromosOrders?
+
+    @@map("order")
 }
 
-model OrderDetail {
-  id        Int     @id @default(autoincrement())
-  quantity  Int     @default(1)
+model PreOrder {
+    id    Int   @id @default(autoincrement())
+    total Float @default(0)
 
-  order     Order   @relation(fields: [orderId], references: [id])
-  orderId   Int     @map("order_id")
+    orderedAt DateTime @default(now()) @map("ordered_at")
 
-  product   Product @relation(fields: [productId], references: [id])
-  productId Int     @map("product_id")
+    user   User? @relation(fields: [userId], references: [id])
+    userId Int   @map("user_id")
 
-  @@map("order_detail")
+    externalUser   ExternalUser? @relation(fields: [externalUserId], references: [id])
+    externalUserId Int           @map("external_user_id")
+
+    preorderProducts PreorderProducts[]
+
+    @@map("pre_order")
 }
 
-model Promotion {
-  id       Int           @id @default(autoincrement())
-  codeName String        @map("code_name")
-  amount   Float
-  quantity Int
-  enable   Boolean       @default(true)
-  type     PromotionType @default(PORCENTAGE)
+model Promo {
+    id        Int       @id @default(autoincrement())
+    name      String
+    type      PromoType
+    amount    Int
+    isEnable  Boolean   @map("is_enable")
+    applyTo   ApplyTo   @map("apply_to")
+    startDate DateTime  @default(now()) @map("start_date")
+    endDate   DateTime  @default(now()) @map("end_date")
 
-  @@map("promotion")
+    promosProducts PromosProducts?
+    promoOrders    PromosOrders?
+
+    @@map("promo")
 }
 
-model preOrder {
-  id       Int    @id @default(autoincrement())
-  products Json
+model PreorderProducts {
+    quantity Int
 
-  client   Client @relation(fields: [clientId], references: [id])
-  clientId Int    @unique @map("client_id")
+    preOrder   PreOrder @relation(fields: [preorderId], references: [id])
+    preorderId Int      @map("preorder_id")
 
-  user     User   @relation(fields: [userId], references: [id])
-  userId   Int    @unique @map("user_id")
+    product   Product @relation(fields: [productId], references: [id])
+    productId Int     @map("product_id")
 
-  @@map("pre_order")
+    @@id([preorderId, productId])
+    @@map("preorders_products")
 }
 
-// ENUMS
+model ProductsCarts {
+    quantity Int
 
-enum PromotionType {
-  MONEY
-  PORCENTAGE
+    cart   Cart @relation(fields: [cartId], references: [id])
+    cartId Int  @map("cart_id")
 
-  @@map("promotion_type")
+    product   Product @relation(fields: [productId], references: [id])
+    productId Int     @map("product_id")
+
+    @@id([cartId, productId])
+    @@map("products_carts")
 }
 
-enum UserRole {
-  ADMIN
-  SELLER
+model ProductsOrders {
+    quantity Int
 
-  @@map("user_role")
+    order   Order @relation(fields: [orderId], references: [id])
+    orderId Int   @map("order_id")
+
+    product   Product @relation(fields: [productId], references: [id])
+    productId Int     @map("product_id")
+
+    @@id([orderId, productId])
+    @@map("products_orders")
 }
 
-enum ClientRole {
-  DISTRIBUTOR
-  BUYER
+model PromosProducts {
+    product   Product @relation(fields: [productId], references: [id])
+    productId Int     @map("product_id")
 
-  @@map("client_role")
+    promo   Promo @relation(fields: [promoId], references: [id])
+    promoId Int   @unique @map("promo_id")
+
+    @@id([productId, promoId])
+    @@map("promos_products")
+}
+
+model PromosOrders {
+    order   Order @relation(fields: [orderId], references: [id])
+    orderId Int   @unique @map("order_id")
+
+    promo   Promo @relation(fields: [promoId], references: [id])
+    promoId Int   @unique @map("promo_id")
+
+    @@id([orderId, promoId])
+    @@map("promos_orders")
+}
+
+enum Roles {
+    ADMIN
+    SELLER
+    SUPERVISOR
+
+    @@map("roles")
+}
+
+enum ExternalRoles {
+    PROVIDER
+    CLIENT
+
+    @@map("external_roles")
+}
+
+enum PromoType {
+    PERCENTAGE
+    MONEY
+
+    @@map("promo_type")
+}
+
+enum ApplyTo {
+    ORDER
+    PRODUCT
+
+    @@map("apply_to")
 }
