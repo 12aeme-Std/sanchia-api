@@ -1,51 +1,20 @@
 import { Router } from 'express';
-import clienController from '../controllers/client.controller';
 import { verifyToken } from '../utilities/middlewares';
+import ClientController from '../controllers/client.controller';
 
-class ClientRouter {
-    public router: Router = Router();
+const router = Router();
+const clientController = new ClientController();
 
-    constructor() {
-        this.clientSignUp();
-        this.clientSignIn();
-        this.clientSignOut();
-        this.getClients();
-        this.deleteClient();
-        this.updateClient();
-    }
+// TODO: Is this really needed? We just need passport auth
+router.post('/', clientController.clientSignUp.bind(clientController));
+router.post('/signin', clientController.clientSignIn.bind(clientController));
+router.post('/singout/:id', clientController.clientSignOut.bind(clientController));
 
-    public clientSignUp = () => {
-        this.router.post('/', clienController.clientSignUp);
-    };
+// TODO: Probably we're missing get by id or similar
+router.get('/', verifyToken, clientController.getClients.bind(clientController));
 
-    public clientSignIn = () => {
-        this.router.post('/signin', clienController.clientSignIn);
-    };
+router.patch('/:id', clientController.updateClient.bind(clientController));
 
-    public clientSignOut = () => {
-        this.router.post('/out/:clientId', clienController.clientSignOut);
-    };
+router.delete('/:id', clientController.deleteClient.bind(clientController));
 
-    public getClients = () => {
-        this.router.get('/', verifyToken, clienController.getClients);
-    };
-
-    public deleteClient = () => {
-        this.router.delete(
-            '/:clientId',
-            verifyToken,
-            clienController.deleteClient
-        );
-    };
-
-    public updateClient = () => {
-        this.router.put(
-            '/:clientId',
-            verifyToken,
-            clienController.updateClient
-        );
-    };
-}
-
-const clientRouter = new ClientRouter();
-export default clientRouter.router;
+export default router;

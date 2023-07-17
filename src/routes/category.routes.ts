@@ -1,46 +1,17 @@
 import { Router } from 'express';
-import categoryController from '../controllers/category.controller';
+import CategoryController from '../controllers/category.controller';
 import { verifyToken } from '../utilities/middlewares';
 
-class CategoryRouter {
-    public router: Router = Router();
+const router = Router();
+const categoryController = new CategoryController;
 
-    constructor() {
-        this.getCategoryById();
-        this.getCategories();
-        this.createCategory();
-        this.updateCategory();
-        this.deleteCategory();
-    }
+router.post('/', verifyToken, categoryController.createCategory.bind(categoryController));
 
-    public getCategoryById = () => {
-        this.router.get('/:categoryId', categoryController.getCategoryById);
-    };
+router.get('/', categoryController.getCategoryById.bind(categoryController));
+router.get('/:id', categoryController.getCategories.bind(categoryController));
 
-    public getCategories = () => {
-        this.router.get('/', categoryController.getCategories);
-    };
+router.patch('/:id', verifyToken, categoryController.updateCategory.bind(categoryController));
 
-    public createCategory = () => {
-        this.router.post('/', verifyToken, categoryController.createCategory);
-    };
+router.delete('/:id', verifyToken, categoryController.deleteCategory.bind(categoryController));
 
-    public updateCategory = () => {
-        this.router.put(
-            '/:categoryId',
-            verifyToken,
-            categoryController.updateCategory
-        );
-    };
-
-    public deleteCategory = () => {
-        this.router.put(
-            '/:categoryId',
-            verifyToken,
-            categoryController.deleteCategory
-        );
-    };
-}
-
-const categoryRouter = new CategoryRouter();
-export default categoryRouter.router;
+export default router;

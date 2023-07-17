@@ -140,5 +140,4 @@ class CartController {
     };
 }
 
-const cartController = new CartController();
-export default cartController;
+export default CartController;

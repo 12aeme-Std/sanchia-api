@@ -100,5 +100,4 @@ class PreOrderController {
     };
 }
 
-const preOrderController = new PreOrderController();
-export default preOrderController;
+export default PreOrderController;

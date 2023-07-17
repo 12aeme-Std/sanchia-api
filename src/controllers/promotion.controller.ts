@@ -76,5 +76,4 @@ class PromotionController {
     };
 }
 
-const promotionController = new PromotionController();
-export default promotionController;
+export default PromotionController;

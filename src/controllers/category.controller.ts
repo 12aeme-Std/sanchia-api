@@ -83,5 +83,4 @@ class CategoryController {
     };
 }
 
-const categoryController = new CategoryController();
-export default categoryController;
+export default CategoryController;

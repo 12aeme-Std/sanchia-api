@@ -1,50 +1,17 @@
 import { Router } from 'express';
 import { verifyToken } from '../utilities/middlewares';
-import promotionController from '../controllers/promotion.controller';
+import PromotionController from '../controllers/promotion.controller';
 
-class PromotionRouter {
-    public router: Router = Router();
+const router = Router();
+const promotionController = new PromotionController();
 
-    constructor() {
-        this.createPromotion();
-        this.getPromotions();
-        this.getPromotionById();
-        this.updatePromotion();
-        this.deletePromotion();
-    }
+router.post('/', verifyToken, promotionController.createPromotion.bind(promotionController));
 
-    public createPromotion = () => {
-        this.router.post('/', verifyToken, promotionController.createPromotion);
-    };
+router.get('/', verifyToken, promotionController.getPromotions.bind(promotionController));
+router.get('/:id', verifyToken, promotionController.getPromotionById.bind(promotionController));
 
-    public getPromotions = () => {
-        this.router.get('/', verifyToken, promotionController.getPromotions);
-    };
+router.patch('/:id', verifyToken, promotionController.updatePromotion.bind(promotionController));
+        
+router.delete('/:id', verifyToken, promotionController.deletePromotion.bind(promotionController));
 
-    public getPromotionById = () => {
-        this.router.get(
-            '/:promoId',
-            verifyToken,
-            promotionController.getPromotionById
-        );
-    };
-
-    public updatePromotion = () => {
-        this.router.put(
-            '/:promoId',
-            verifyToken,
-            promotionController.updatePromotion
-        );
-    };
-
-    public deletePromotion = () => {
-        this.router.delete(
-            '/:promoId',
-            verifyToken,
-            promotionController.deletePromotion
-        );
-    };
-}
-
-const promotionRouter = new PromotionRouter();
-export default promotionRouter.router;
+export default router;

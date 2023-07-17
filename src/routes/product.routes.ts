@@ -1,50 +1,18 @@
 import { Router } from 'express';
-import productController from '../controllers/product.controller';
 import { verifyToken, upload } from '../utilities/middlewares';
+import ProductController from '../controllers/product.controller';
 
-class ProductRouter {
-    public router: Router = Router();
+const router = Router();
+const productController = new ProductController()
 
-    constructor() {
-        this.getProductById();
-        this.getProducts();
-        this.createProduct();
-        this.updateProduct();
-    }
+router.get('/', productController.getProducts.bind(productController));
+router.get('/:id', productController.getProductById.bind(productController));
 
-    public getProductById = () => {
-        this.router.get('/:productId', productController.getProductById);
-    };
 
-    public getProducts = () => {
-        this.router.get('/', productController.getProducts);
-    };
+router.post('/', upload.array('images'), verifyToken, productController.createProduct.bind(productController));
 
-    public createProduct = () => {
-        this.router.post(
-            '/',
-            upload.array('images'),
-            verifyToken,
-            productController.createProduct
-        );
-    };
+router.patch('/:id', verifyToken, productController.updateProduct.bind(productController));
 
-    public updateProduct = () => {
-        this.router.put(
-            '/:productId',
-            verifyToken,
-            productController.updateProduct
-        );
-    };
+router.delete('/:id', verifyToken, productController.deleteProduct.bind(productController));
 
-    public deleteProduct = () => {
-        this.router.delete(
-            '/:productId',
-            verifyToken,
-            productController.deleteProduct
-        );
-    };
-}
-
-const productRouter = new ProductRouter();
-export default productRouter.router;
+export default router;

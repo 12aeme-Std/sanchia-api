@@ -1,59 +1,17 @@
 import { Router } from 'express';
-import preOrderController from '../controllers/preorder.controller';
 import { verifyToken, verifyRole } from '../utilities/middlewares';
+import PreOrderController from '../controllers/preorder.controller';
 
-class PreOrderRouter {
-    public router: Router = Router();
+const router = Router();
+const preOrderController = new PreOrderController();
 
-    constructor() {
-        this.getPreOrderByClientId();
-        this.getPreOrders();
-        this.createPreOrder();
-        this.updatePreOrder();
-        this.deletePreOrder();
-    }
+router.get('/', verifyToken, verifyRole('read', 'preorder'), preOrderController.getPreOrders.bind(preOrderController));
+router.get('/:id', verifyToken, preOrderController.getPreOrderByClientId.bind(preOrderController));
 
-    public getPreOrderByClientId = () => {
-        this.router.get(
-            '/:clientId',
-            verifyToken,
-            preOrderController.getPreOrderByClientId
-        );
-    };
+router.post('/:id', verifyToken, preOrderController.createPreOrder.bind(preOrderController));
 
-    public getPreOrders = () => {
-        this.router.get(
-            '/',
-            verifyToken,
-            verifyRole('read', 'preorder'),
-            preOrderController.getPreOrders
-        );
-    };
+router.patch('/:id', verifyToken, preOrderController.updatePreOrder.bind(preOrderController));
 
-    public createPreOrder = () => {
-        this.router.post(
-            '/:clientId',
-            verifyToken,
-            preOrderController.createPreOrder
-        );
-    };
+router.delete('/:id', verifyToken, preOrderController.deletePreOrder.bind(preOrderController));
 
-    public updatePreOrder = () => {
-        this.router.put(
-            '/:clientId',
-            verifyToken,
-            preOrderController.updatePreOrder
-        );
-    };
-
-    public deletePreOrder = () => {
-        this.router.delete(
-            '/:clientId',
-            verifyToken,
-            preOrderController.deletePreOrder
-        );
-    };
-}
-
-const preOrderRouter = new PreOrderRouter();
-export default preOrderRouter.router;
+export default router;

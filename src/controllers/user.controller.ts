@@ -9,7 +9,7 @@ class UserController {
         this.prisma = new PrismaClient();
     }
 
-    signUp = async (req: Request, res: Response) => {
+    async signUp(req: Request, res: Response) {
         try {
             const { name, email, password, role } = req.body;
             const passwordHash = await encrypt(password);
@@ -25,7 +25,7 @@ class UserController {
         } catch (err) {
             return res.status(500).send({ message: 'ups, server error', err });
         }
-    };
+    }
 
     signIn = async (req: Request, res: Response) => {
         const { email, password } = req.body;
@@ -113,5 +113,4 @@ class UserController {
     };
 }
 
-const userController = new UserController();
-export default userController;
+export default UserController;

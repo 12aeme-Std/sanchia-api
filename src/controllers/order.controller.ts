@@ -162,5 +162,4 @@ class OrderController {
     };
 }
 
-const orderController = new OrderController();
-export default orderController;
+export default OrderController;

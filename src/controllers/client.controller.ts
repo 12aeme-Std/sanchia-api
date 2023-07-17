@@ -111,5 +111,4 @@ class ClientController {
     };
 }
 
-const clienController = new ClientController();
-export default clienController;
+export default ClientController;

@@ -1,43 +1,19 @@
 import { Router } from 'express';
-import userController from '../controllers/user.controller';
+import UserController from '../controllers/user.controller';
 import { verifyToken } from '../utilities/middlewares';
 
-class UserRouter {
-    public router: Router = Router();
+const router = Router();
+const userController = new UserController();
 
-    constructor() {
-        this.signUp();
-        this.signIn();
-        this.signOut();
-        this.getUsers();
-        this.updateUser();
-        this.deleteUser();
-    }
+// Missing get an specific user
+router.post('/', userController.signUp.bind(userController));
+router.post('/signin', userController.signIn.bind(userController));
+router.post('/signout', userController.signOut.bind(userController));
 
-    public signUp = () => {
-        this.router.post('/', userController.signUp);
-    };
+router.get('/', verifyToken, userController.getUsers.bind(userController));
 
-    public signIn = () => {
-        this.router.post('/singin', userController.signIn);
-    };
+router.patch('/:id', verifyToken, userController.updateUser.bind(userController));
 
-    public signOut = () => {
-        this.router.post('/out/:userId', userController.signOut);
-    };
+router.delete('/:id', verifyToken, userController.deleteUser.bind(userController));
 
-    public getUsers = () => {
-        this.router.get('/', verifyToken, userController.getUsers);
-    };
-
-    public updateUser = () => {
-        this.router.delete('/:userId', verifyToken, userController.updateUser);
-    };
-
-    public deleteUser = () => {
-        this.router.post('/:userId', verifyToken, userController.deleteUser);
-    };
-}
-
-const userRouter = new UserRouter();
-export default userRouter.router;
+export default router;
