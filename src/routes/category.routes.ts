@@ -3,7 +3,7 @@ import categoryController from '../controllers/category.controller';
 import { verifyToken } from '../utilities/middlewares';
 
 class CategoryRouter {
-    public router : Router = Router();
+    public router: Router = Router();
 
     constructor() {
         this.getCategoryById();
@@ -26,13 +26,21 @@ class CategoryRouter {
     };
 
     public updateCategory = () => {
-        this.router.put('/:categoryId', verifyToken, categoryController.updateCategory);
+        this.router.put(
+            '/:categoryId',
+            verifyToken,
+            categoryController.updateCategory
+        );
     };
 
     public deleteCategory = () => {
-        this.router.put('/:categoryId', verifyToken, categoryController.deleteCategory);
+        this.router.put(
+            '/:categoryId',
+            verifyToken,
+            categoryController.deleteCategory
+        );
     };
 }
 
 const categoryRouter = new CategoryRouter();
-export default categoryRouter.router; 
+export default categoryRouter.router;

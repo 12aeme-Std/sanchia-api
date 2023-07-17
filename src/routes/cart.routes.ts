@@ -3,7 +3,7 @@ import cartController from '../controllers/cart.controller';
 import { verifyToken } from '../utilities/middlewares';
 
 class CartRouter {
-    public router : Router = Router();
+    public router: Router = Router();
 
     constructor() {
         this.getCart();
@@ -20,7 +20,11 @@ class CartRouter {
     };
 
     public removeToCart = () => {
-        this.router.delete('/:productId', verifyToken, cartController.removeToCart);
+        this.router.delete(
+            '/:productId',
+            verifyToken,
+            cartController.removeToCart
+        );
     };
 }
 

@@ -3,7 +3,7 @@ import orderController from '../controllers/order.controller';
 import { verifyToken } from '../utilities/middlewares';
 
 class OrderRouter {
-    public router : Router = Router();
+    public router: Router = Router();
 
     constructor() {
         this.createOrder();
