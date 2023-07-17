@@ -12,9 +12,11 @@ model User {
   name        String
   email       String     @unique
   password    String
-  accessToken String?
+  accessToken String?    @map("access_token")
   role        UserRole   @default(ADMIN)
   preOrder    preOrder[]
+
+  @@map("user")
 }
 
 model Client {
@@ -22,20 +24,26 @@ model Client {
   name        String
   email       String     @unique
   password    String
-  accessToken String?
+  accessToken String?    @map("access_token")
   role        ClientRole @default(BUYER)
   cart        Cart[]
   order       Order[]
   preOrder    preOrder[]
+
+  @@map("client")
 }
 
 model Cart {
   id        Int     @id @default(autoincrement())
   quantity  Int     @default(1)
+
   client    Client  @relation(fields: [clientId], references: [id])
-  clientId  Int
+  clientId  Int     @map("client_id")
+
   product   Product @relation(fields: [productId], references: [id])
-  productId Int
+  productId Int     @map("product_id")
+
+  @@map("cart")
 }
 
 model Product {
@@ -44,61 +52,85 @@ model Product {
   description   String
   price         Float
   stock         Int
+
   category      Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  categoryId    Int
+  categoryId    Int             @map("category_id")
+
   productImages ProductImages[]
   Cart          Cart[]
   orderDetail   OrderDetail[]
+
+  @@map("product")
 }
 
 model Category {
   id      Int       @id @default(autoincrement())
   name    String    @unique
+
   product Product[]
+
+  @@map("category")
 }
 
 model ProductImages {
   id        Int     @id @default(autoincrement())
-  product   Product @relation(fields: [productId], references: [id])
-  productId Int
   url       String
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int     @map("product_id")
+
+  @@map("product_image")
 }
 
 model Order {
   id            Int           @id @default(autoincrement())
-  client        Client        @relation(fields: [clientId], references: [id])
-  clientId      Int
   total         Float
-  discountTotal Float         @default(0)
+  totalDiscount Float         @default(0) @map("total_discount")
   saving        Float         @default(0)
+
+  client        Client        @relation(fields: [clientId], references: [id])
+  clientId      Int           @map("client_id")
+
   orderDetail   OrderDetail[]
+
+  @@map("order")
 }
 
 model OrderDetail {
   id        Int     @id @default(autoincrement())
   quantity  Int     @default(1)
+
   order     Order   @relation(fields: [orderId], references: [id])
-  orderId   Int
+  orderId   Int     @map("order_id")
+
   product   Product @relation(fields: [productId], references: [id])
-  productId Int
+  productId Int     @map("product_id")
+
+  @@map("order_detail")
 }
 
 model Promotion {
   id       Int           @id @default(autoincrement())
-  codeName String
+  codeName String        @map("code_name")
   amount   Float
   quantity Int
   enable   Boolean       @default(true)
   type     PromotionType @default(PORCENTAGE)
+
+  @@map("promotion")
 }
 
 model preOrder {
   id       Int    @id @default(autoincrement())
-  client   Client @relation(fields: [clientId], references: [id])
-  clientId Int    @unique
-  user     User   @relation(fields: [userId], references: [id])
-  userId   Int    @unique
   products Json
+
+  client   Client @relation(fields: [clientId], references: [id])
+  clientId Int    @unique @map("client_id")
+
+  user     User   @relation(fields: [userId], references: [id])
+  userId   Int    @unique @map("user_id")
+
+  @@map("pre_order")
 }
 
 // ENUMS
@@ -106,14 +138,20 @@ model preOrder {
 enum PromotionType {
   MONEY
   PORCENTAGE
+
+  @@map("promotion_type")
 }
 
 enum UserRole {
   ADMIN
   SELLER
+
+  @@map("user_role")
 }
 
 enum ClientRole {
   DISTRIBUTOR
   BUYER
+
+  @@map("client_role")
 }

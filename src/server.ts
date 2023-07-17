@@ -1,4 +1,4 @@
-import express, { Application } from 'express';
+import express, { type Application } from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 
@@ -13,7 +13,7 @@ import preOrderRoutes from './routes/preorder.routes';
 
 class Server {
     public app: Application;
-    
+
     constructor() {
         this.app = express();
         this.config();
@@ -23,7 +23,7 @@ class Server {
     config(): void {
         this.app.set('port', process.env.PORT || 3000);
         this.app.use(cors());
-        this.app.use(bodyParser.urlencoded({extended : true}));
+        this.app.use(bodyParser.urlencoded({ extended: true }));
         this.app.use(bodyParser.json());
     }
 
@@ -40,9 +40,9 @@ class Server {
 
     start(): void {
         this.app.listen(this.app.get('port'), () => {
-          console.log('Server on port ' + this.app.get('port'));
+            console.log('Server on port ' + this.app.get('port'));
         });
-      }
+    }
 }
 
 const server = new Server();

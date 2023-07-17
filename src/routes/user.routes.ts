@@ -3,7 +3,7 @@ import userController from '../controllers/user.controller';
 import { verifyToken } from '../utilities/middlewares';
 
 class UserRouter {
-    public router : Router = Router();
+    public router: Router = Router();
 
     constructor() {
         this.signUp();
@@ -12,7 +12,7 @@ class UserRouter {
         this.getUsers();
         this.updateUser();
         this.deleteUser();
-    } 
+    }
 
     public signUp = () => {
         this.router.post('/', userController.signUp);
