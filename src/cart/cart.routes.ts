@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { verifyToken } from '../utilities/middlewares';
-import CartController from '../controllers/cart.controller';
+import CartController from './cart.controller';
 
 const router = Router();
 const cartController = new CartController();

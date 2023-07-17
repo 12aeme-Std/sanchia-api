@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { verifyToken, upload } from '../utilities/middlewares';
-import ProductController from '../controllers/product.controller';
+import ProductController from './product.controller';
 
 const router = Router();
 const productController = new ProductController()

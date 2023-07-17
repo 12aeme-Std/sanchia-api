@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import UserController from '../controllers/user.controller';
+import UserController from './user.controller';
 import { verifyToken } from '../utilities/middlewares';
 
 const router = Router();
@@ -12,8 +12,16 @@ router.post('/signout', userController.signOut.bind(userController));
 
 router.get('/', verifyToken, userController.getUsers.bind(userController));
 
-router.patch('/:id', verifyToken, userController.updateUser.bind(userController));
+router.patch(
+    '/:id',
+    verifyToken,
+    userController.updateUser.bind(userController)
+);
 
-router.delete('/:id', verifyToken, userController.deleteUser.bind(userController));
+router.delete(
+    '/:id',
+    verifyToken,
+    userController.deleteUser.bind(userController)
+);
 
 export default router;

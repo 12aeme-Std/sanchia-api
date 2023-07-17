@@ -1,6 +1,6 @@
 import { type Request, type Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { compare, encrypt, tokenKey } from './../utilities/helpers';
+import { compare, encrypt, tokenKey } from '../utilities/helpers';
 
 class UserController {
     private readonly prisma: PrismaClient;

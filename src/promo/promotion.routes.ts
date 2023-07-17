@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { verifyToken } from '../utilities/middlewares';
-import PromotionController from '../controllers/promotion.controller';
+import PromotionController from './promotion.controller';
 
 const router = Router();
 const promotionController = new PromotionController();

@@ -2,14 +2,14 @@ import express, { type Application } from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 
-import cartRouter from './routes/cart.routes';
-import categoryRouter from './routes/category.routes';
-import clientRouter from './routes/client.routes';
-import orderRouter from './routes/order.routes';
-import productRouter from './routes/product.routes';
-import userRouter from './routes/user.routes';
-import promotionRouter from './routes/promotion.routes';
-import preOrderRoutes from './routes/preorder.routes';
+import cartRouter from './cart/cart.routes';
+import categoryRouter from './category/category.routes';
+import clientRouter from './client/client.routes';
+import orderRouter from './order/order.routes';
+import productRouter from './product/product.routes';
+import userRouter from './user/user.routes';
+import promotionRouter from './promo/promotion.routes';
+import preOrderRoutes from './preorder/preorder.routes';
 
 class Server {
     public app: Application;

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { verifyToken, verifyRole } from '../utilities/middlewares';
-import PreOrderController from '../controllers/preorder.controller';
+import PreOrderController from './preorder.controller';
 
 const router = Router();
 const preOrderController = new PreOrderController();
