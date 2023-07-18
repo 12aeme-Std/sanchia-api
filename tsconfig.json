@@ -11,6 +11,7 @@
             "@config/*": ["./src/config/*"],
             "@user/*": ["./src/user/*"],
             "@auth/*": ["./src/auth/*"],
+            "@product/*": ["./src/product/*"]
         }
     },
 }
