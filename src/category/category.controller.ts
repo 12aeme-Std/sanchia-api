@@ -1,86 +1,49 @@
-import { type Request, type Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-class CategoryController {
-    private readonly prisma: PrismaClient;
+import { Request, Response } from 'express';
+import { CategoryService } from './category.service';
+export class CategoryController {
+    private readonly categoryService: CategoryService;
 
     constructor() {
-        this.prisma = new PrismaClient();
+        this.categoryService = new CategoryService();
     }
 
-    getCategoryById = async (req: Request, res: Response) => {
-        try {
-            const { categoryId } = req.params;
-            const category = await this.prisma.category.findFirst({
-                where: { id: Number(categoryId) },
-                include: { product: true },
-            });
-            return res.status(200).send({ category });
-        } catch (err) {
-            return res.status(500).send({ message: 'ups, server error', err });
-        }
-    };
+    async create(req: Request, res: Response) {
+        return res
+            .status(200)
+            .json(await this.categoryService.create(req.body));
+    }
 
-    getCategories = async (req: Request, res: Response) => {
-        try {
-            const categories = await this.prisma.category.findMany({
-                include: { product: true },
-            });
-            return res.status(200).send({
-                categories,
-            });
-        } catch (err) {
-            return res.status(500).send({ message: 'ups, server error', err });
-        }
-    };
+    async findOne(req: Request, res: Response) {
+        return res.status(200).json(
+            await this.categoryService.findOne({
+                id: Number(req.params.id),
+            })
+        );
+    }
 
-    createCategory = async (req: Request, res: Response) => {
-        try {
-            const { name } = req.body;
-            const newCategory = await this.prisma.category.create({
-                data: { name },
-            });
+    async findAll(req: Request, res: Response) {
+        const products = await this.categoryService.findAll({
+            page: Number(req.query.page) ?? 1,
+            limit: Number(req.query.limit) ?? 15,
+        });
 
-            return res
-                .status(200)
-                .send({ message: 'Product created successfully', newCategory });
-        } catch (err) {
-            return res.status(500).send({ message: 'ups, server error', err });
-        }
-    };
+        return res.status(200).json(products);
+    }
 
-    updateCategory = async (req: Request, res: Response) => {
-        try {
-            const { categoryId } = req.params;
-            const { name } = req.body;
-            const categoryUpdate = await this.prisma.category.update({
-                where: { id: Number(categoryId) },
-                data: { name },
-            });
+    async update(req: Request, res: Response) {
+        return res
+            .status(200)
+            .json(
+                await this.categoryService.update(
+                    Number(req.params.id),
+                    req.body
+                )
+            );
+    }
 
-            return res.status(200).send({
-                message: 'product updated successfully',
-                categoryUpdate,
-            });
-        } catch (err) {
-            return res.status(500).send({ message: 'ups, server error', err });
-        }
-    };
-
-    deleteCategory = async (req: Request, res: Response) => {
-        try {
-            const { categoryId } = req.params;
-            await this.prisma.category.delete({
-                where: { id: Number(categoryId) },
-            });
-
-            return res
-                .status(200)
-                .send({ message: 'category deleted successfully' });
-        } catch (err) {
-            return res.status(500).send({ message: 'ups, server error', err });
-        }
-    };
+    async delete(req: Request, res: Response) {
+        return res
+            .status(200)
+            .json(await this.categoryService.delete(Number(req.params.id)));
+    }
 }
-
-export default CategoryController;
