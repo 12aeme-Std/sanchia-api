@@ -15,12 +15,12 @@ export default function passportConfig() {
         async function (payload, done) {
             try {
                 const user = await userService.findOne({
-                    id: payload.sub,
+                    id: payload.id,
                 });
 
-                return done(null, user!);
+                done(null, user!);
             } catch (error) {
-                return done(new Error('Something when wrong'), false);
+                done(new Error('Something when wrong'), false);
             }
         }
     );
