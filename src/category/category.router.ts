@@ -15,3 +15,5 @@ router.get('/', categoryController.findAll.bind(categoryController));
 router.patch('/:id', categoryController.update.bind(categoryController));
 
 router.delete('/', categoryController.delete.bind(categoryController));
+
+export default router;

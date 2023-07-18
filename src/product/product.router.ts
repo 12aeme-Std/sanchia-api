@@ -15,3 +15,5 @@ router.get('/', productController.findAll.bind(productController));
 router.patch('/:id', productController.update.bind(productController));
 
 router.delete('/:id', productController.delete.bind(productController));
+
+export default router;
