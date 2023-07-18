@@ -1,5 +1,5 @@
+import { UserService } from '@user/user.service';
 import passportJwt from 'passport-jwt';
-import { UserService } from '../user/user.service';
 
 const JwtStrategy = passportJwt.Strategy;
 const ExtractJwt = passportJwt.ExtractJwt;

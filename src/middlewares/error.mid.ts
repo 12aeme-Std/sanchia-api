@@ -1,5 +1,6 @@
+import { HttpError } from '@common/http-error';
 import { NextFunction, Request, Response } from 'express';
-import { HttpError } from '../common/http-error';
+
 
 export default function errorHandler(
     err: Error,
@@ -10,7 +11,7 @@ export default function errorHandler(
     if (err instanceof HttpError)
         return res.status(err.getStatusCode()).json({ message: err.message });
 
-    // TODO: On prod, chaange this return message
+    // TODO: On prod, change this return message
     if (err) return res.status(400).json({ message: err.message });
 
     next();

@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import { ProductDto } from './dtos/product.dto';
-import { HttpError } from '../common/http-error';
-import { IPagination } from '../common/interfaces/pagination.interface';
+import { HttpError } from '@common/http-error';
+import { IPagination } from '@common/interfaces/pagination.interface';
 
 export class ProductService {
     private readonly prisma: PrismaClient;

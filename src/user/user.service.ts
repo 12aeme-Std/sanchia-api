@@ -1,8 +1,8 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import { UserDto } from './user.dto';
-import { HttpError } from '../common/http-error';
 import * as bcrypt from 'bcrypt';
-import { IPagination } from '../common/interfaces/pagination.interface';
+import { HttpError } from '@common/http-error';
+import { IPagination } from '@common/interfaces/pagination.interface';
 
 export class UserService {
     private readonly prisma: PrismaClient;
@@ -71,7 +71,10 @@ export class UserService {
             throw new HttpError(404, 'User not found');
 
         const hashedPwd = data.password
-            ? await bcrypt.hash(data.password as string, +process.env.SALT!)
+            ? await bcrypt.hash(
+                  data.password as string,
+                  Number(process.env.SALT)!
+              )
             : undefined;
 
         return await this.prisma.user.update({

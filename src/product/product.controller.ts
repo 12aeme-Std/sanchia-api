@@ -1,5 +1,6 @@
-import { ProductService } from './product.service';
+
 import { Request, Response } from 'express';
+import { ProductService } from './product.service';
 
 export class ProductController {
     private readonly productService: ProductService;

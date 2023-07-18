@@ -2,8 +2,8 @@ import { PrismaClient, Prisma } from '@prisma/client';
 import { UserDto } from '../user/user.dto';
 import bcrypt from 'bcrypt';
 import { LoginDto } from './dtos/login.dto';
-import { HttpError } from '../common/http-error';
 import jwt from 'jsonwebtoken';
+import { HttpError } from '@common/http-error';
 
 export class AuthService {
     private readonly prisma: PrismaClient;
