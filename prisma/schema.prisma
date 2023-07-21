@@ -18,9 +18,10 @@ model User {
     createdAt   DateTime @default(now()) @map("created_at")
     updatedAt   DateTime @updatedAt() @map("updated_at")
 
-    cart     Cart[]
-    orders   Order[]
-    PreOrder PreOrder[]
+    cart              Cart[]
+    orders            Order[]
+    PreOrder          PreOrder[]
+    wereHouseMovement WareHouseMovement[]
 
     @@map("user")
 }
@@ -61,6 +62,7 @@ model Product {
     productsOrders   ProductsOrders[]
     promosProducts   PromosProducts[]
     preorderProducts PreorderProducts[]
+    manufacture      Manufacture[]
 
     @@map("product")
 }
@@ -241,4 +243,152 @@ enum ApplyTo {
     PRODUCT
 
     @@map("apply_to")
+}
+
+model WareHouse {
+    id        Int      @id @default(autoincrement())
+    name      String   @unique
+    createdAt DateTime @default(now()) @map("created_at")
+
+    rawMaterial                  RawMaterial[]
+    wareHouseMovementOrigin      WareHouseMovement[] @relation("origin")
+    wareHouseMovementDestination WareHouseMovement[] @relation("destination")
+
+    @@map("ware_house")
+}
+
+model RawMaterial {
+    id        Int      @id @default(autoincrement())
+    name      String
+    quantity  Int
+    createdAt DateTime @default(now()) @map("created_at")
+
+    wereHouse   WareHouse @relation(fields: [wareHouseId], references: [id])
+    wareHouseId Int       @map("ware_house_id")
+
+    type RawMaterials @default(RAW)
+
+    manufacture       Manufacture[]
+    mixRawMaterial    MixRawMaterial[]
+    wereHouseMovement WareHouseMovement[]
+
+    @@map("raw_material")
+}
+
+model Mixture {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now()) @map("created_at")
+    name      String   @unique
+
+    mixRawMaterial    MixRawMaterial[]
+    mixMachine        MixMachine[]
+    wereHouseMovement WareHouseMovement[]
+
+    @@map("mixture")
+}
+
+model Machine {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now()) @map("created_at")
+    name      String   @unique
+
+    manufacture       Manufacture[]
+    mixMachine        MixMachine[]
+    wereHouseMovement WareHouseMovement[]
+
+    @@map("machine")
+}
+
+model Manufacture {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now()) @map("created_at")
+
+    machine   Machine @relation(fields: [machineId], references: [id])
+    machineId Int     @map("machine_id")
+
+    rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
+    rawMaterialId Int         @map("raw_material_id")
+
+    product   Product @relation(fields: [productId], references: [id])
+    productId Int     @map("product_id")
+
+    status ManufactureStatus
+
+    @@map("manufacture")
+}
+
+model MixRawMaterial {
+    id       Int @id @default(autoincrement())
+    quantity Int
+
+    mixture   Mixture @relation(fields: [mixtureId], references: [id])
+    mixtureId Int     @map("mixture_id")
+
+    rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
+    rawMaterialId Int         @map("raw_material_id")
+
+    @@map("mix_raw_material")
+}
+
+model MixMachine {
+    id       Int @id @default(autoincrement())
+    quantity Int
+
+    mixture   Mixture @relation(fields: [mixtureId], references: [id])
+    mixtureId Int     @map("mixture_id")
+
+    machine   Machine @relation(fields: [machineId], references: [id])
+    machineId Int     @map("machine_id")
+
+    @@map("mix_machine")
+}
+
+model WareHouseMovement {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now()) @map("created_at")
+    quantity  Int
+
+    type WareHouseType
+
+    wareHouseOrigin        WareHouse @relation("origin", fields: [wareHouseOriginId], references: [id])
+    wareHouseDestination   WareHouse @relation("destination", fields: [wareHouseDestinationId], references: [id])
+    wareHouseOriginId      Int       @map("ware_house_origin_id")
+    wareHouseDestinationId Int       @map("ware_house_destination_id")
+
+    machine   Machine @relation(fields: [machineId], references: [id])
+    machineId Int     @map("machine_id")
+
+    rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
+    rawMaterialId Int         @map("raw_material_id")
+
+    mixture   Mixture @relation(fields: [mixtureId], references: [id])
+    mixtureId Int     @map("mixture_id")
+
+    user   User @relation(fields: [userId], references: [id])
+    userId Int  @map("user_id")
+
+    @@map("ware_house_movement")
+}
+
+enum WareHouseType {
+    PRODUCT
+    MIX
+
+    @@map("ware_house_type")
+}
+
+enum RawMaterials {
+    PRODUCT
+    RAW
+
+    @@map("raw_materials")
+}
+
+enum ManufactureStatus {
+    PRODUCT
+    PRODUCTION
+    REFUSE
+    REJECTED
+
+    @@map("manufacture_status")
 }
