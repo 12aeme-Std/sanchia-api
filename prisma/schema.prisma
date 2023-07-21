@@ -21,7 +21,7 @@ model User {
     cart              Cart[]
     orders            Order[]
     PreOrder          PreOrder[]
-    wereHouseMovement WareHouseMovement[]
+    werehouseMovement WarehouseMovement[]
 
     @@map("user")
 }
@@ -216,45 +216,16 @@ model PromosOrders {
     @@map("promos_orders")
 }
 
-enum Roles {
-    ADMIN
-    SELLER
-    SUPERVISOR
-
-    @@map("roles")
-}
-
-enum ExternalRoles {
-    PROVIDER
-    CLIENT
-
-    @@map("external_roles")
-}
-
-enum PromoType {
-    PERCENTAGE
-    MONEY
-
-    @@map("promo_type")
-}
-
-enum ApplyTo {
-    ORDER
-    PRODUCT
-
-    @@map("apply_to")
-}
-
-model WareHouse {
+model Warehouse {
     id        Int      @id @default(autoincrement())
     name      String   @unique
     createdAt DateTime @default(now()) @map("created_at")
 
     rawMaterial                  RawMaterial[]
-    wareHouseMovementOrigin      WareHouseMovement[] @relation("origin")
-    wareHouseMovementDestination WareHouseMovement[] @relation("destination")
+    warehouseMovementOrigin      WarehouseMovement[] @relation("origin")
+    warehouseMovementDestination WarehouseMovement[] @relation("destination")
 
-    @@map("ware_house")
+    @@map("warehouse")
 }
 
 model RawMaterial {
@@ -263,14 +234,14 @@ model RawMaterial {
     quantity  Int
     createdAt DateTime @default(now()) @map("created_at")
 
-    wereHouse   WareHouse @relation(fields: [wareHouseId], references: [id])
-    wareHouseId Int       @map("ware_house_id")
+    werehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+    warehouseId Int       @map("warehouse_id")
 
     type RawMaterials @default(RAW)
 
     manufacture       Manufacture[]
     mixRawMaterial    MixRawMaterial[]
-    wereHouseMovement WareHouseMovement[]
+    warehouseMovement WarehouseMovement[]
 
     @@map("raw_material")
 }
@@ -282,7 +253,7 @@ model Mixture {
 
     mixRawMaterial    MixRawMaterial[]
     mixMachine        MixMachine[]
-    wereHouseMovement WareHouseMovement[]
+    warehouseMovement WarehouseMovement[]
 
     @@map("mixture")
 }
@@ -294,7 +265,7 @@ model Machine {
 
     manufacture       Manufacture[]
     mixMachine        MixMachine[]
-    wereHouseMovement WareHouseMovement[]
+    warehouseMovement WarehouseMovement[]
 
     @@map("machine")
 }
@@ -343,17 +314,17 @@ model MixMachine {
     @@map("mix_machine")
 }
 
-model WareHouseMovement {
+model WarehouseMovement {
     id        Int      @id @default(autoincrement())
     createdAt DateTime @default(now()) @map("created_at")
     quantity  Int
 
-    type WareHouseType
+    type WarehouseType
 
-    wareHouseOrigin        WareHouse @relation("origin", fields: [wareHouseOriginId], references: [id])
-    wareHouseDestination   WareHouse @relation("destination", fields: [wareHouseDestinationId], references: [id])
-    wareHouseOriginId      Int       @map("ware_house_origin_id")
-    wareHouseDestinationId Int       @map("ware_house_destination_id")
+    warehouseOrigin        Warehouse @relation("origin", fields: [warehouseOriginId], references: [id])
+    warehouseDestination   Warehouse @relation("destination", fields: [warehouseDestinationId], references: [id])
+    warehouseOriginId      Int       @map("warehouse_origin_id")
+    warehouseDestinationId Int       @map("warehouse_destination_id")
 
     machine   Machine @relation(fields: [machineId], references: [id])
     machineId Int     @map("machine_id")
@@ -367,14 +338,43 @@ model WareHouseMovement {
     user   User @relation(fields: [userId], references: [id])
     userId Int  @map("user_id")
 
-    @@map("ware_house_movement")
+    @@map("warehouse_movement")
 }
 
-enum WareHouseType {
+enum Roles {
+    ADMIN
+    SELLER
+    SUPERVISOR
+
+    @@map("roles")
+}
+
+enum ExternalRoles {
+    PROVIDER
+    CLIENT
+
+    @@map("external_roles")
+}
+
+enum PromoType {
+    PERCENTAGE
+    MONEY
+
+    @@map("promo_type")
+}
+
+enum ApplyTo {
+    ORDER
+    PRODUCT
+
+    @@map("apply_to")
+}
+
+enum WarehouseType {
     PRODUCT
     MIX
 
-    @@map("ware_house_type")
+    @@map("warehouse_type")
 }
 
 enum RawMaterials {

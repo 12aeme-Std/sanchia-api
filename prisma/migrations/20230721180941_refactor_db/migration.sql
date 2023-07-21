@@ -1,19 +1,19 @@
 -- CreateEnum
-CREATE TYPE "ware_house_type" AS ENUM ('PRODUCT', 'MIX');
+CREATE TYPE "warehouse_type" AS ENUM ('PRODUCT', 'MIX');
 
 -- CreateEnum
-CREATE TYPE "raw_material" AS ENUM ('PRODUCT', 'RAW');
+CREATE TYPE "raw_materials" AS ENUM ('PRODUCT', 'RAW');
 
 -- CreateEnum
 CREATE TYPE "manufacture_status" AS ENUM ('PRODUCT', 'PRODUCTION', 'REFUSE', 'REJECTED');
 
 -- CreateTable
-CREATE TABLE "ware_house" (
+CREATE TABLE "warehouse" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "ware_house_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "warehouse_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -22,8 +22,8 @@ CREATE TABLE "raw_material" (
     "name" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "ware_house_id" INTEGER NOT NULL,
-    "type" "raw_material" NOT NULL DEFAULT 'PRODUCT',
+    "warehouse_id" INTEGER NOT NULL,
+    "type" "raw_materials" NOT NULL DEFAULT 'RAW',
 
     CONSTRAINT "raw_material_pkey" PRIMARY KEY ("id")
 );
@@ -79,23 +79,23 @@ CREATE TABLE "mix_machine" (
 );
 
 -- CreateTable
-CREATE TABLE "WareHouseMovement" (
+CREATE TABLE "warehouse_movement" (
     "id" SERIAL NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "quantity" INTEGER NOT NULL,
-    "type" "ware_house_type" NOT NULL,
-    "ware_house_origin_id" INTEGER NOT NULL,
-    "ware_house_destination_id" INTEGER NOT NULL,
+    "type" "warehouse_type" NOT NULL,
+    "warehouse_origin_id" INTEGER NOT NULL,
+    "warehouse_destination_id" INTEGER NOT NULL,
     "machine_id" INTEGER NOT NULL,
     "raw_material_id" INTEGER NOT NULL,
     "mixture_id" INTEGER NOT NULL,
     "user_id" INTEGER NOT NULL,
 
-    CONSTRAINT "WareHouseMovement_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "warehouse_movement_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ware_house_name_key" ON "ware_house"("name");
+CREATE UNIQUE INDEX "warehouse_name_key" ON "warehouse"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "mixture_name_key" ON "mixture"("name");
@@ -104,7 +104,7 @@ CREATE UNIQUE INDEX "mixture_name_key" ON "mixture"("name");
 CREATE UNIQUE INDEX "machine_name_key" ON "machine"("name");
 
 -- AddForeignKey
-ALTER TABLE "raw_material" ADD CONSTRAINT "raw_material_ware_house_id_fkey" FOREIGN KEY ("ware_house_id") REFERENCES "ware_house"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "raw_material" ADD CONSTRAINT "raw_material_warehouse_id_fkey" FOREIGN KEY ("warehouse_id") REFERENCES "warehouse"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "manufacture" ADD CONSTRAINT "manufacture_machine_id_fkey" FOREIGN KEY ("machine_id") REFERENCES "machine"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -128,19 +128,19 @@ ALTER TABLE "mix_machine" ADD CONSTRAINT "mix_machine_mixture_id_fkey" FOREIGN K
 ALTER TABLE "mix_machine" ADD CONSTRAINT "mix_machine_machine_id_fkey" FOREIGN KEY ("machine_id") REFERENCES "machine"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "WareHouseMovement" ADD CONSTRAINT "WareHouseMovement_ware_house_origin_id_fkey" FOREIGN KEY ("ware_house_origin_id") REFERENCES "ware_house"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "warehouse_movement" ADD CONSTRAINT "warehouse_movement_warehouse_origin_id_fkey" FOREIGN KEY ("warehouse_origin_id") REFERENCES "warehouse"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "WareHouseMovement" ADD CONSTRAINT "WareHouseMovement_ware_house_destination_id_fkey" FOREIGN KEY ("ware_house_destination_id") REFERENCES "ware_house"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "warehouse_movement" ADD CONSTRAINT "warehouse_movement_warehouse_destination_id_fkey" FOREIGN KEY ("warehouse_destination_id") REFERENCES "warehouse"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "WareHouseMovement" ADD CONSTRAINT "WareHouseMovement_machine_id_fkey" FOREIGN KEY ("machine_id") REFERENCES "machine"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "warehouse_movement" ADD CONSTRAINT "warehouse_movement_machine_id_fkey" FOREIGN KEY ("machine_id") REFERENCES "machine"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "WareHouseMovement" ADD CONSTRAINT "WareHouseMovement_raw_material_id_fkey" FOREIGN KEY ("raw_material_id") REFERENCES "raw_material"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "warehouse_movement" ADD CONSTRAINT "warehouse_movement_raw_material_id_fkey" FOREIGN KEY ("raw_material_id") REFERENCES "raw_material"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "WareHouseMovement" ADD CONSTRAINT "WareHouseMovement_mixture_id_fkey" FOREIGN KEY ("mixture_id") REFERENCES "mixture"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "warehouse_movement" ADD CONSTRAINT "warehouse_movement_mixture_id_fkey" FOREIGN KEY ("mixture_id") REFERENCES "mixture"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "WareHouseMovement" ADD CONSTRAINT "WareHouseMovement_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "warehouse_movement" ADD CONSTRAINT "warehouse_movement_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
