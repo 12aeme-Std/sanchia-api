@@ -21,7 +21,7 @@ model User {
     cart              Cart[]
     orders            Order[]
     PreOrder          PreOrder[]
-    werehouseMovement WarehouseMovement[]
+    werehouseMovement WarehouseMovement?
 
     @@map("user")
 }
@@ -62,7 +62,6 @@ model Product {
     productsOrders   ProductsOrders[]
     promosProducts   PromosProducts[]
     preorderProducts PreorderProducts[]
-    manufacture      Manufacture[]
 
     @@map("product")
 }
@@ -270,6 +269,16 @@ model Machine {
     @@map("machine")
 }
 
+model ManufactureProduct {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now()) @map("created_at")
+    name      String
+
+    manufacture Manufacture[]
+
+    @@map("manufacture_product")
+}
+
 model Manufacture {
     id        Int      @id @default(autoincrement())
     createdAt DateTime @default(now()) @map("created_at")
@@ -280,8 +289,8 @@ model Manufacture {
     rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
     rawMaterialId Int         @map("raw_material_id")
 
-    product   Product @relation(fields: [productId], references: [id])
-    productId Int     @map("product_id")
+    manufactureProduct   ManufactureProduct @relation(fields: [manufactureProductId], references: [id])
+    manufactureProductId Int                @map("manufacture_product_id")
 
     status ManufactureStatus
 
@@ -321,9 +330,10 @@ model WarehouseMovement {
 
     type WarehouseType
 
-    warehouseOrigin        Warehouse @relation("origin", fields: [warehouseOriginId], references: [id])
+    warehouseOrigin   Warehouse @relation("origin", fields: [warehouseOriginId], references: [id])
+    warehouseOriginId Int       @map("warehouse_origin_id")
+
     warehouseDestination   Warehouse @relation("destination", fields: [warehouseDestinationId], references: [id])
-    warehouseOriginId      Int       @map("warehouse_origin_id")
     warehouseDestinationId Int       @map("warehouse_destination_id")
 
     machine   Machine @relation(fields: [machineId], references: [id])
@@ -336,7 +346,7 @@ model WarehouseMovement {
     mixtureId Int     @map("mixture_id")
 
     user   User @relation(fields: [userId], references: [id])
-    userId Int  @map("user_id")
+    userId Int  @unique @map("user_id")
 
     @@map("warehouse_movement")
 }
