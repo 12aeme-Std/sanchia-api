@@ -16,7 +16,10 @@
             "@auth/*": ["./src/auth/*"],
             "@product/*": ["./src/product/*"],
             "@common/*": ["./src/common/*"],
-            "@category/*": ["./src/category/*"]
+            "@category/*": ["./src/category/*"],
+            "@warehouse/*": ["./src/warehouse/*"],
+            "@machine/*": ["./src/machine/*"],
+            "@recipe/*": ["./src/recipe/*"]
         }
     },
 }
