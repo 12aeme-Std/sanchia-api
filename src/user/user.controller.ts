@@ -9,7 +9,7 @@ export class UserController {
     }
 
     async register(req: Request, res: Response) {
-        const user = this.userService.register(req.body);
+        const user = await this.userService.register(req.body);
 
         return res.status(200).json(user);
     }

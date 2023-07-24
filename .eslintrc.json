@@ -19,6 +19,8 @@
         "@typescript-eslint/no-misused-promises": "off",
         "@typescript-eslint/no-confusing-void-expression": "off",
         "@typescript-eslint/import/first": "off",
-        "@typescript-eslint/triple-slash-reference": "off"
+        "@typescript-eslint/triple-slash-reference": "off",
+        "no-return-await": "off",
+        "@typescript-eslint/return-await": "off"
     }
 }
