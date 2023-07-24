@@ -23,7 +23,7 @@ export class UserService {
             Number(process.env.SALT ?? 10)
         );
 
-        return await this.prisma.user.create({
+        return this.prisma.user.create({
             data: {
                 ...data,
                 password: hashedPwd,

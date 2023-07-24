@@ -2,19 +2,36 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { ProductDto } from './dtos/product.dto';
 import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
+import { CategoryService } from '@category/category.service';
+import { CreateProductDto } from './dtos/create-product.dto';
 
 export class ProductService {
     private readonly prisma: PrismaClient;
+    private readonly categoryService: CategoryService;
 
     constructor() {
         this.prisma = new PrismaClient();
+        this.categoryService = new CategoryService();
     }
 
     // TODO: Are we handling unique products?
     // TODO: Are we sure we want to save img in disk?
     // TODO: All products are related with a category?
-    async createProdut(data: Prisma.ProductCreateInput): Promise<ProductDto> {
-        return await this.prisma.product.create({ data });
+    async createProdut(data: CreateProductDto): Promise<ProductDto> {
+        if (!(await this.categoryService.findOne({ name: data.category }))) {
+            throw new HttpError(400, 'Invalid category');
+        }
+
+        return this.prisma.product.create({
+            data: {
+                ...data,
+                category: {
+                    connect: {
+                        name: data.category,
+                    },
+                },
+            },
+        });
     }
 
     // TODO: If img and category are requiretments, include them in query
