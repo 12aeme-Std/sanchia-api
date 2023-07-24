@@ -19,7 +19,8 @@
             "@category/*": ["./src/category/*"],
             "@warehouse/*": ["./src/warehouse/*"],
             "@machine/*": ["./src/machine/*"],
-            "@recipe/*": ["./src/recipe/*"]
+            "@recipe/*": ["./src/recipe/*"],
+            "@mixture/*": ["./src/mixture/*"]
         }
     },
 }
