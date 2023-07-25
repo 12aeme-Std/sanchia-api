@@ -18,9 +18,10 @@ model User {
     createdAt   DateTime @default(now()) @map("created_at")
     updatedAt   DateTime @updatedAt() @map("updated_at")
 
-    cart     Cart[]
-    orders   Order[]
-    PreOrder PreOrder[]
+    carts              Cart[]
+    orders             Order[]
+    PreOrders          PreOrder[]
+    werehouseMovements WarehouseMovement?
 
     @@map("user")
 }
@@ -37,7 +38,7 @@ model ExternalUser {
     createdAt   DateTime      @default(now()) @map("created_at")
     updatedAt   DateTime      @updatedAt() @map("updated_at")
 
-    cart      Cart[]
+    carts     Cart[]
     orders    Order[]
     preOrders PreOrder[]
 
@@ -72,7 +73,7 @@ model Image {
     isCover    Boolean  @map("is_cover")
     uploadedAt DateTime @default(now()) @map("uploaded_at")
 
-    products  Product @relation(fields: [productId], references: [id])
+    product   Product @relation(fields: [productId], references: [id])
     productId Int     @map("product_id")
 
     @@map("image")
@@ -80,7 +81,7 @@ model Image {
 
 model Category {
     id   Int    @id @default(autoincrement())
-    name String
+    name String @unique
 
     products Product[]
 
@@ -95,7 +96,7 @@ model Cart {
     user   User? @relation(fields: [userId], references: [id])
     userId Int   @map("user_id")
 
-    ExternalUser   ExternalUser? @relation(fields: [externalUserId], references: [id])
+    ExternalUsers  ExternalUser? @relation(fields: [externalUserId], references: [id])
     externalUserId Int           @map("external_user_id")
 
     @@map("cart")
@@ -214,6 +215,161 @@ model PromosOrders {
     @@map("promos_orders")
 }
 
+model Warehouse {
+    id        Int      @id @default(autoincrement())
+    name      String   @unique
+    createdAt DateTime @default(now()) @map("created_at")
+
+    rawMaterials                  RawMaterial[]
+    warehouseMovementOrigins      WarehouseMovement[] @relation("origin")
+    warehouseMovementDestinations WarehouseMovement[] @relation("destination")
+
+    @@map("warehouse")
+}
+
+model RawMaterial {
+    id        Int      @id @default(autoincrement())
+    name      String
+    quantity  Int
+    createdAt DateTime @default(now()) @map("created_at")
+
+    werehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+    warehouseId Int       @map("warehouse_id")
+
+    type RawMaterials @default(RAW)
+
+    manufactures       Manufacture[]
+    mixRawMaterials    MixRawMaterial[]
+    warehouseMovements WarehouseMovement[]
+    recipes            Recipe[]
+
+    @@map("raw_material")
+}
+
+model Mixture {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now()) @map("created_at")
+    name      String   @unique
+
+    mixRawMaterials    MixRawMaterial[]
+    mixMachines        MixMachine[]
+    warehouseMovements WarehouseMovement[]
+    recipes            Recipe[]
+
+    @@map("mixture")
+}
+
+model Machine {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now()) @map("created_at")
+    name      String   @unique
+
+    manufactures       Manufacture[]
+    mixMachines        MixMachine[]
+    warehouseMovements WarehouseMovement[]
+
+    @@map("machine")
+}
+
+model ManufactureProduct {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now()) @map("created_at")
+    name      String
+
+    manufactures Manufacture[]
+
+    @@map("manufacture_product")
+}
+
+model Manufacture {
+    id        Int               @id @default(autoincrement())
+    createdAt DateTime          @default(now()) @map("created_at")
+    status    ManufactureStatus
+
+    machine   Machine @relation(fields: [machineId], references: [id])
+    machineId Int     @map("machine_id")
+
+    rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
+    rawMaterialId Int         @map("raw_material_id")
+
+    manufactureProduct   ManufactureProduct @relation(fields: [manufactureProductId], references: [id])
+    manufactureProductId Int                @map("manufacture_product_id")
+
+    @@map("manufacture")
+}
+
+model MixRawMaterial {
+    id       Int @id @default(autoincrement())
+    quantity Int
+
+    mixture   Mixture @relation(fields: [mixtureId], references: [id])
+    mixtureId Int     @map("mixture_id")
+
+    rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
+    rawMaterialId Int         @map("raw_material_id")
+
+    @@map("mix_raw_material")
+}
+
+model MixMachine {
+    id       Int @id @default(autoincrement())
+    quantity Int
+
+    mixture   Mixture @relation(fields: [mixtureId], references: [id])
+    mixtureId Int     @map("mixture_id")
+
+    machine   Machine @relation(fields: [machineId], references: [id])
+    machineId Int     @map("machine_id")
+
+    @@map("mix_machine")
+}
+
+model WarehouseMovement {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now()) @map("created_at")
+    quantity  Int
+
+    type WarehouseType
+
+    warehouseOrigin   Warehouse @relation("origin", fields: [warehouseOriginId], references: [id])
+    warehouseOriginId Int       @map("warehouse_origin_id")
+
+    warehouseDestination   Warehouse @relation("destination", fields: [warehouseDestinationId], references: [id])
+    warehouseDestinationId Int       @map("warehouse_destination_id")
+
+    machine   Machine @relation(fields: [machineId], references: [id])
+    machineId Int     @map("machine_id")
+
+    rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
+    rawMaterialId Int         @map("raw_material_id")
+
+    mixture   Mixture @relation(fields: [mixtureId], references: [id])
+    mixtureId Int     @map("mixture_id")
+
+    user   User @relation(fields: [userId], references: [id])
+    userId Int  @unique @map("user_id")
+
+    @@map("warehouse_movement")
+}
+
+model Recipe {
+    id          Int    @id @default(autoincrement())
+    name        String @unique
+    description String
+    quantity    Float
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
+    rawMaterialId Int         @map("raw_material_id")
+
+    mixture   Mixture @relation(fields: [mixtureId], references: [id])
+    mixtureId Int     @map("mixture_id")
+
+    @@map("recipe")
+}
+
 enum Roles {
     ADMIN
     SELLER
@@ -241,4 +397,27 @@ enum ApplyTo {
     PRODUCT
 
     @@map("apply_to")
+}
+
+enum WarehouseType {
+    PRODUCT
+    MIX
+
+    @@map("warehouse_type")
+}
+
+enum RawMaterials {
+    PRODUCT
+    RAW
+
+    @@map("raw_materials")
+}
+
+enum ManufactureStatus {
+    PRODUCT
+    PRODUCTION
+    REFUSE
+    REJECTED
+
+    @@map("manufacture_status")
 }

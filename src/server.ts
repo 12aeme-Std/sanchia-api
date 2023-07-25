@@ -1,49 +1,24 @@
-import express, { type Application } from 'express';
-import bodyParser from 'body-parser';
-import cors from 'cors';
+/* eslint-disable import/first */
+/// <reference types="./types/request.d.ts" />
+require('express-async-errors');
+import express from 'express';
+import baseRouter from './common/base-router';
+import errorHandler from './middlewares/error.mid';
+import passportConfig from './config/passport';
+import passport from 'passport';
 
-import cartRouter from './routes/cart.routes';
-import categoryRouter from './routes/category.routes';
-import clientRouter from './routes/client.routes';
-import orderRouter from './routes/order.routes';
-import productRouter from './routes/product.routes';
-import userRouter from './routes/user.routes';
-import promotionRouter from './routes/promotion.routes';
-import preOrderRoutes from './routes/preorder.routes';
+passport.use(passportConfig());
 
-class Server {
-    public app: Application;
+const app = express();
 
-    constructor() {
-        this.app = express();
-        this.config();
-        this.routes();
-    }
+passportConfig();
 
-    config(): void {
-        this.app.set('port', process.env.PORT || 3000);
-        this.app.use(cors());
-        this.app.use(bodyParser.urlencoded({ extended: true }));
-        this.app.use(bodyParser.json());
-    }
+app.use(express.json());
 
-    routes(): void {
-        this.app.use('/user', userRouter);
-        this.app.use('/product', productRouter);
-        this.app.use('/order', orderRouter);
-        this.app.use('/client', clientRouter);
-        this.app.use('/category', categoryRouter);
-        this.app.use('/cart', cartRouter);
-        this.app.use('/promo', promotionRouter);
-        this.app.use('/preorder', preOrderRoutes);
-    }
+app.use('/api', baseRouter);
 
-    start(): void {
-        this.app.listen(this.app.get('port'), () => {
-            console.log('Server on port ' + this.app.get('port'));
-        });
-    }
-}
+app.use(errorHandler);
 
-const server = new Server();
-server.start();
+app.listen(process.env.PORT ?? 3000, () => {
+    console.log(`Running on port: ${process.env.PORT!}`);
+});
