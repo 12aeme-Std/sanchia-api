@@ -22,8 +22,8 @@ export class MachineController {
 
     async findAll(req: Request, res: Response) {
         const machines = await this.machineService.findAll({
-            page: Number(req.params.page ?? 1),
-            limit: Number(req.params.limit ?? 15),
+            page: Number(req.query.page ?? 1),
+            limit: Number(req.query.limit ?? 15),
         });
 
         return res.status(200).json(machines);

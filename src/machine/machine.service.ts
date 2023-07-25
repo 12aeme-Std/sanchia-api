@@ -14,15 +14,13 @@ export class MachineService {
         if (!this.exists({ name: data.name }))
             throw new HttpError(400, 'Machine already exists');
 
-        return await this.prisma.machine.create({ data });
+        return this.prisma.machine.create({ data });
     }
 
     async findOne(where: Prisma.MachineWhereUniqueInput): Promise<MachineDto> {
-        return await this.prisma.machine
-            .findUniqueOrThrow({ where })
-            .catch(() => {
-                throw new HttpError(404, 'Machine does not exists');
-            });
+        return this.prisma.machine.findUniqueOrThrow({ where }).catch(() => {
+            throw new HttpError(404, 'Machine does not exists');
+        });
     }
 
     async findAll(
@@ -34,9 +32,9 @@ export class MachineService {
     ): Promise<MachineDto[]> {
         const { page, limit, cursor, where, orderBy } = params;
 
-        return await this.prisma.machine.findMany({
-            take: page! - 1,
-            skip: limit,
+        return this.prisma.machine.findMany({
+            skip: page! - 1,
+            take: limit,
             cursor,
             where,
             orderBy,
@@ -50,7 +48,7 @@ export class MachineService {
         if (!this.exists({ id }))
             throw new HttpError(404, 'Machine does not exists');
 
-        return await this.prisma.machine.update({
+        return this.prisma.machine.update({
             data,
             where: { id },
         });
