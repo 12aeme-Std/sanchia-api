@@ -15,13 +15,13 @@ export class WarehouseService {
             throw new HttpError(409, 'Warehouse already exists');
         }
 
-        return await this.prisma.warehouse.create({ data });
+        return this.prisma.warehouse.create({ data });
     }
 
     async findOne(
         where: Prisma.WarehouseWhereUniqueInput
     ): Promise<WarehouseDto> {
-        return await this.prisma.warehouse
+        return this.prisma.warehouse
             .findUniqueOrThrow({
                 where,
             })
@@ -39,9 +39,9 @@ export class WarehouseService {
     ): Promise<WarehouseDto[]> {
         const { page, limit, cursor, where, orderBy } = params;
 
-        return await this.prisma.warehouse.findMany({
-            take: page! - 1,
-            skip: limit,
+        return this.prisma.warehouse.findMany({
+            skip: page! - 1,
+            take: limit,
             where,
             orderBy,
             cursor,
@@ -52,19 +52,19 @@ export class WarehouseService {
         id: number,
         data: Prisma.WarehouseUpdateInput
     ): Promise<WarehouseDto> {
-        if (!this.exists({ id })) {
-            throw new HttpError(409, 'Warehouse already exists');
+        if (!(await this.exists({ id }))) {
+            throw new HttpError(404, 'Warehouse does not exists');
         }
 
-        return await this.prisma.warehouse.update({
+        return this.prisma.warehouse.update({
             data,
             where: { id },
         });
     }
 
     async delete(id: number): Promise<void> {
-        if (!this.exists({ id })) {
-            throw new HttpError(409, 'Warehouse already exists');
+        if (!(await this.exists({ id }))) {
+            throw new HttpError(404, 'Warehouse does not exists');
         }
 
         await this.prisma.warehouse.delete({ where: { id } });
