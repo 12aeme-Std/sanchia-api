@@ -4,6 +4,7 @@ import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { CategoryService } from '@category/category.service';
 import { CreateProductDto } from './dtos/create-product.dto';
+import { CategoryDto } from '@category/dtos/category.dto';
 
 export class ProductService {
     private readonly prisma: PrismaClient;
@@ -14,13 +15,16 @@ export class ProductService {
         this.categoryService = new CategoryService();
     }
 
-    // TODO: Are we handling unique products?
-    // TODO: Are we sure we want to save img in disk?
-    // TODO: All products are related with a category?
+    // TODO: Product img
     async createProdut(data: CreateProductDto): Promise<ProductDto> {
         if (!(await this.categoryService.findOne({ name: data.category }))) {
             throw new HttpError(400, 'Invalid category');
         }
+
+        if (
+            await this.prisma.product.findUnique({ where: { name: data.name } })
+        )
+            throw new HttpError(409, 'Product already exists');
 
         return this.prisma.product.create({
             data: {
@@ -36,11 +40,9 @@ export class ProductService {
 
     // TODO: If img and category are requiretments, include them in query
     async findOne(where: Prisma.ProductWhereUniqueInput): Promise<ProductDto> {
-        return await this.prisma.product
-            .findUniqueOrThrow({ where })
-            .catch(() => {
-                throw new HttpError(404, 'Product not found');
-            });
+        return this.prisma.product.findUniqueOrThrow({ where }).catch(() => {
+            throw new HttpError(404, 'Product not found');
+        });
     }
 
     // TODO: If img and category are requiretments, include them in query
@@ -53,7 +55,9 @@ export class ProductService {
     ): Promise<ProductDto[]> {
         const { page, limit, cursor, where, orderBy } = params;
 
-        return await this.prisma.product.findMany({
+        // TODO: Include all the category and not just the id
+
+        return this.prisma.product.findMany({
             skip: page! - 1,
             take: limit,
             cursor,
@@ -69,7 +73,9 @@ export class ProductService {
     ): Promise<ProductDto> {
         await this.findOne({ id });
 
-        return await this.prisma.product.update({ data, where: { id } });
+        // TODO: Add method to verify that the new name does not exists
+
+        return this.prisma.product.update({ data, where: { id } });
     }
 
     async delete(id: number): Promise<void> {

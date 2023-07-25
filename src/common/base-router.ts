@@ -14,9 +14,9 @@ router.use('/users', userRouter);
 router.use('/products', productRouter);
 router.use('/auth', authRouter);
 router.use('/category', categoryRouter);
-router.use('/warehouse', warehouseRouter);
+router.use('/warehouses', warehouseRouter);
 router.use('/machines', machineRouter);
 router.use('/recipes', recipeRouter);
-router.use('/mixture', mixtureRouter);
+router.use('/mixtures', mixtureRouter);
 
 export default router;
