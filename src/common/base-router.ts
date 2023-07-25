@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import authRouter from '@auth/auth.router';
 import categoryRouter from '@category/category.router';
+import authRouter from '@auth/auth.router';
 import productRouter from '@product/product.router';
 import userRouter from '@user/user.router';
 import warehouseRouter from '@warehouse/warehouse.router';
 import machineRouter from '@machine/machine.router';
 import recipeRouter from '@recipe/recipe.router';
+import mixtureRouter from '@mixture/mixture.router';
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use('/category', categoryRouter);
 router.use('/warehouse', warehouseRouter);
 router.use('/machines', machineRouter);
 router.use('/recipes', recipeRouter);
+router.use('/mixture', mixtureRouter);
 
 export default router;
