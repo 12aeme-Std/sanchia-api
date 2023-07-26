@@ -10,19 +10,19 @@ export class MixtureService {
         this.prisma = new PrismaClient();
     }
 
+    // TODO: Connect with recipes
+    // TODO: Check raw material to allow this method
     async create(data: Prisma.MixtureCreateInput): Promise<MixtureDto> {
         if (!this.exists({ name: data.name }))
             throw new HttpError(400, 'Mixture already exists');
 
-        return await this.prisma.mixture.create({ data });
+        return this.prisma.mixture.create({ data });
     }
 
     async findOne(where: Prisma.MixtureWhereUniqueInput): Promise<MixtureDto> {
-        return await this.prisma.mixture
-            .findUniqueOrThrow({ where })
-            .catch(() => {
-                throw new HttpError(404, 'Mixture does not exists');
-            });
+        return this.prisma.mixture.findUniqueOrThrow({ where }).catch(() => {
+            throw new HttpError(404, 'Mixture does not exists');
+        });
     }
 
     async findAll(
@@ -34,9 +34,9 @@ export class MixtureService {
     ): Promise<MixtureDto[]> {
         const { page, limit, cursor, where, orderBy } = params;
 
-        return await this.prisma.mixture.findMany({
-            take: page! - 1,
-            skip: limit,
+        return this.prisma.mixture.findMany({
+            skip: page! - 1,
+            take: limit,
             cursor,
             where,
             orderBy,
@@ -47,17 +47,17 @@ export class MixtureService {
         id: number,
         data: Prisma.MixtureUpdateInput
     ): Promise<MixtureDto> {
-        if (!this.exists({ id }))
+        if (!(await this.exists({ id })))
             throw new HttpError(404, 'Mixture does not exists');
 
-        return await this.prisma.mixture.update({
+        return this.prisma.mixture.update({
             data,
             where: { id },
         });
     }
 
     async delete(id: number): Promise<void> {
-        if (!this.exists({ id }))
+        if (!(await this.exists({ id })))
             throw new HttpError(404, 'Mixture does not exists');
 
         await this.prisma.mixture.delete({ where: { id } });

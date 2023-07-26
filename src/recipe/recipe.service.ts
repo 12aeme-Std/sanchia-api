@@ -10,19 +10,20 @@ export class RecipeService {
         this.prisma = new PrismaClient();
     }
 
+    // TODO: Connect with raw material, check if we have enough material
+    // TODO: Connect with mixture
+    // TODO: Update raw material and mixture
     async create(data: Prisma.RecipeCreateInput): Promise<RecipeDto> {
-        if (!this.exists({ name: data.name }))
+        if (await this.exists({ name: data.name }))
             throw new HttpError(409, 'Recipe already exists');
 
-        return await this.prisma.recipe.create({ data });
+        return this.prisma.recipe.create({ data });
     }
 
     async findOne(where: Prisma.RecipeWhereUniqueInput): Promise<RecipeDto> {
-        return await this.prisma.recipe
-            .findUniqueOrThrow({ where })
-            .catch(() => {
-                throw new HttpError(404, 'Recipe not found');
-            });
+        return this.prisma.recipe.findUniqueOrThrow({ where }).catch(() => {
+            throw new HttpError(404, 'Recipe not found');
+        });
     }
 
     async findAll(
@@ -34,7 +35,7 @@ export class RecipeService {
     ): Promise<RecipeDto[]> {
         const { page, limit, cursor, where, orderBy } = params;
 
-        return await this.prisma.recipe.findMany({
+        return this.prisma.recipe.findMany({
             take: page! - 1,
             skip: limit,
             where,
@@ -51,7 +52,7 @@ export class RecipeService {
             throw new HttpError(409, 'Recipe already exists');
         }
 
-        return await this.prisma.recipe.update({
+        return this.prisma.recipe.update({
             data,
             where: { id },
         });

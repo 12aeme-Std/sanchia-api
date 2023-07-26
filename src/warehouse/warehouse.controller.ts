@@ -31,13 +31,19 @@ export class WarehouseController {
     }
 
     async update(req: Request, res: Response) {
-        return await this.warehouseService.update(
-            Number(req.params.id),
-            req.body
-        );
+        return res
+            .status(200)
+            .json(
+                await this.warehouseService.update(
+                    Number(req.params.id),
+                    req.body
+                )
+            );
     }
 
     async delete(req: Request, res: Response) {
-        return await this.warehouseService.delete(Number(req.params.id));
+        return res
+            .status(200)
+            .json(await this.warehouseService.delete(Number(req.params.id)));
     }
 }

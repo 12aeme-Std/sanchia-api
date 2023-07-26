@@ -12,8 +12,8 @@ router.post('/', machineController.create.bind(machineController));
 router.get('/:id', machineController.findOne.bind(machineController));
 router.get('/', machineController.findAll.bind(machineController));
 
-router.post('/:id', machineController.update.bind(machineController));
+router.patch('/:id', machineController.update.bind(machineController));
 
-router.post('/:id', machineController.delete.bind(machineController));
+router.delete('/:id', machineController.delete.bind(machineController));
 
 export default router;

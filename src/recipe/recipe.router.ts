@@ -12,8 +12,8 @@ router.post('/', recipeController.create.bind(recipeController));
 router.get('/:id', recipeController.findOne.bind(recipeController));
 router.get('/', recipeController.findAll.bind(recipeController));
 
-router.post('/:id', recipeController.update.bind(recipeController));
+router.patch('/:id', recipeController.update.bind(recipeController));
 
-router.post('/:id', recipeController.delete.bind(recipeController));
+router.delete('/:id', recipeController.delete.bind(recipeController));
 
 export default router;

@@ -32,7 +32,7 @@ export class UserService {
     }
 
     async findOne(where: Prisma.UserWhereUniqueInput): Promise<UserDto | null> {
-        return await this.prisma.user.findUniqueOrThrow({ where }).catch(() => {
+        return this.prisma.user.findUniqueOrThrow({ where }).catch(() => {
             throw new HttpError(404, 'User not found');
         });
     }
@@ -46,7 +46,7 @@ export class UserService {
     ): Promise<UserDto[]> {
         const { page, limit, cursor, where, orderBy } = params;
 
-        return await this.prisma.user.findMany({
+        return this.prisma.user.findMany({
             skip: page! - 1,
             take: limit,
             cursor,
@@ -77,7 +77,7 @@ export class UserService {
               )
             : undefined;
 
-        return await this.prisma.user.update({
+        return this.prisma.user.update({
             data: {
                 ...data,
                 password: hashedPwd,

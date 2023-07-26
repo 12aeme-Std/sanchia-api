@@ -11,20 +11,20 @@ export class CategoryService {
         this.prisma = new PrismaClient();
     }
 
-    // TODO: Do we have unique categories?
     async create(data: Prisma.CategoryCreateInput): Promise<CategoryDto> {
-        return await this.prisma.category.create({ data });
+        if (await this.exists({ name: data.name }))
+            throw new HttpError(409, 'Category already exists');
+
+        return this.prisma.category.create({ data });
     }
 
     // TODO: Do we have to include products related with each category?
     async findOne(
         where: Prisma.CategoryWhereUniqueInput
     ): Promise<CategoryDto | null> {
-        return await this.prisma.category
-            .findUniqueOrThrow({ where })
-            .catch(() => {
-                throw new HttpError(404, 'Category not found');
-            });
+        return this.prisma.category.findUniqueOrThrow({ where }).catch(() => {
+            throw new HttpError(404, 'Category not found');
+        });
     }
 
     // TODO: Do we have to include products related with each category?
@@ -37,7 +37,7 @@ export class CategoryService {
     ): Promise<CategoryDto[]> {
         const { page, limit, cursor, where, orderBy } = params;
 
-        return await this.prisma.category.findMany({
+        return this.prisma.category.findMany({
             skip: page! - 1,
             take: limit,
             cursor,
@@ -50,14 +50,22 @@ export class CategoryService {
         id: number,
         data: Prisma.CategoryUpdateInput
     ): Promise<CategoryDto> {
-        await this.findOne({ id });
+        if (!(await this.exists({ id })))
+            throw new HttpError(404, 'Category does not exists');
 
-        return await this.prisma.category.update({ data, where: { id } });
+        // TODO: Add method to verify that the new name does not exists
+
+        return this.prisma.category.update({ data, where: { id } });
     }
 
     async delete(id: number): Promise<void> {
-        await this.findOne({ id });
+        if (!(await this.exists({ id })))
+            throw new HttpError(404, 'Category does not exists');
 
         await this.prisma.category.delete({ where: { id } });
+    }
+
+    private async exists(where: Prisma.CategoryWhereUniqueInput) {
+        return (await this.prisma.category.findUnique({ where })) !== null;
     }
 }
