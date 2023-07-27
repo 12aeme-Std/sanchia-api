@@ -7,6 +7,7 @@ import warehouseRouter from '@warehouse/warehouse.router';
 import machineRouter from '@machine/machine.router';
 import recipeRouter from '@recipe/recipe.router';
 import mixtureRouter from '@mixture/mixture.router';
+import rawMaterialRouter from '@raw-material/raw-material.router';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/warehouses', warehouseRouter);
 router.use('/machines', machineRouter);
 router.use('/recipes', recipeRouter);
 router.use('/mixtures', mixtureRouter);
+router.use('/raw-material', rawMaterialRouter);
 
 export default router;

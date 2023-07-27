@@ -20,7 +20,8 @@
             "@warehouse/*": ["./src/warehouse/*"],
             "@machine/*": ["./src/machine/*"],
             "@recipe/*": ["./src/recipe/*"],
-            "@mixture/*": ["./src/mixture/*"]
+            "@mixture/*": ["./src/mixture/*"],
+            "@raw-material/*": ["./src/raw-material/*"],
         }
     },
 }
