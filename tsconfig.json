@@ -24,7 +24,7 @@
             "@manufacture-machine/*": ["./src/manufacture-machine/*"],
             "@recipe/*": ["./src/recipe/*"],
             "@mixture/*": ["./src/mixture/*"],
-            "@raw-material/*": ["./src/raw-material/*"],
+            "@raw-material/*": ["./src/raw-material/*"]
         }
-    },
+    }
 }

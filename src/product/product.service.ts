@@ -4,7 +4,7 @@ import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { CategoryService } from '@category/category.service';
 import { CreateProductDto } from './dtos/create-product.dto';
-import { CategoryDto } from '@category/dtos/category.dto';
+// import { CategoryDto } from '@category/dtos/category.dto';
 
 export class ProductService {
     private readonly prisma: PrismaClient;
