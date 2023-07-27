@@ -21,12 +21,12 @@ export class RecipeController {
     }
 
     async findAll(req: Request, res: Response) {
-        const machines = await this.recipeService.findAll({
-            page: Number(req.params.page ?? 1),
-            limit: Number(req.params.limit ?? 15),
+        const recipes = await this.recipeService.findAll({
+            page: Number(req.query.page ?? 1),
+            limit: Number(req.query.limit ?? 15),
         });
 
-        return res.status(200).json(machines);
+        return res.status(200).json(recipes);
     }
 
     async update(req: Request, res: Response) {
