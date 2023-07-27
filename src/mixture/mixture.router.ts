@@ -7,7 +7,7 @@ const mixtureController = new MixtureController();
 
 router.use(passport.authenticate('jwt', { session: false }));
 
-router.post('/', mixtureController.create.bind(mixtureController));
+// router.post('/', mixtureController.create.bind(mixtureController));
 
 router.get('/:id', mixtureController.findOne.bind(mixtureController));
 router.get('/', mixtureController.findAll.bind(mixtureController));
