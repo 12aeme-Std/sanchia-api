@@ -1,6 +1,6 @@
 import passport from 'passport';
 import { Router } from 'express';
-import { RawMaterialController } from './raw.mataerial.controller';
+import { RawMaterialController } from './raw.material.controller';
 
 const router = Router();
 const rawMaterialController = new RawMaterialController();

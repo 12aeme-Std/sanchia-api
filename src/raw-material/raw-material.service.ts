@@ -2,6 +2,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { RawMaterialDto } from './dtos/raw-material.dto';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { HttpError } from '@common/http-error';
+import { CreateRawMaterialDto } from './dtos/create-raw-material.dto';
 
 export class RawMaterialService {
     private readonly prisma: PrismaClient;
@@ -10,8 +11,17 @@ export class RawMaterialService {
         this.prisma = new PrismaClient();
     }
 
-    async create(data: Prisma.RawMaterialCreateInput): Promise<RawMaterialDto> {
-        return this.prisma.rawMaterial.create({ data });
+    async create(data: CreateRawMaterialDto): Promise<RawMaterialDto> {
+        return this.prisma.rawMaterial.create({
+            data: {
+                ...data,
+                warehouse: {
+                    connect: {
+                        id: data.warehouse,
+                    },
+                },
+            },
+        });
     }
 
     async findOne(
@@ -62,5 +72,16 @@ export class RawMaterialService {
 
     private async exists(where: Prisma.RawMaterialWhereUniqueInput) {
         return (await this.prisma.rawMaterial.findUnique({ where })) !== null;
+    }
+
+    async enoughStock(
+        needed: number,
+        where: Prisma.RawMaterialWhereUniqueInput
+    ) {
+        const { stock } = await this.prisma.rawMaterial.findUniqueOrThrow({
+            where,
+        });
+
+        return stock >= needed;
     }
 }
