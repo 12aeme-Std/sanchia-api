@@ -6,10 +6,13 @@ import baseRouter from './common/base-router';
 import errorHandler from './middlewares/error.mid';
 import passportConfig from './config/passport';
 import passport from 'passport';
+import cors from 'cors';
 
 passport.use(passportConfig());
 
 const app = express();
+
+app.use(cors());
 
 passportConfig();
 
