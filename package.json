@@ -5,9 +5,9 @@
     "main": "server.ts",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "build": "tsc",
+        "build": "tsc && resolve-tspaths",
+        "start": "node dist/src/server.js",
         "dev": "nodemon -e ts,js --exec ts-node -r tsconfig-paths/register ./src/server.ts",
-        "start": "nodemon -e ts,js --exec ts-node -r tsconfig-paths/register ./src/server.ts",
         "lint": "eslint --fix --ext .js,.ts .",
         "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\""
     },
@@ -49,6 +49,8 @@
         "express-async-errors": "^3.1.1",
         "jsonwebtoken": "^9.0.1",
         "multer": "^1.4.5-lts.1",
-        "passport-jwt": "^4.0.1"
+        "passport-jwt": "^4.0.1",
+        "resolve-tspaths": "^0.8.14",
+        "tspath": "^2.6.8"
     }
 }
