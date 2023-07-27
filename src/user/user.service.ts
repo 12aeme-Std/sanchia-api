@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from '@prisma/client';
-import { UserDto } from './user.dto';
+import { UserDto } from './dtos/user.dto';
 import * as bcrypt from 'bcrypt';
 import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';

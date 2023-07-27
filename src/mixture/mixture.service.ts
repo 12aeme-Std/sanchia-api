@@ -2,22 +2,62 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { MixtureDto } from './dtos/mixture.dtos';
 import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
+import { RawMaterialService } from '@raw-material/raw-material.service';
+import { CreateMixtureDto } from './dtos/create-mixture.dto';
 
 export class MixtureService {
     private readonly prisma: PrismaClient;
+    private readonly rawMaterialService: RawMaterialService;
 
     constructor() {
         this.prisma = new PrismaClient();
+        this.rawMaterialService = new RawMaterialService();
     }
 
     // TODO: Connect with recipes
     // TODO: Check raw material to allow this method
-    async create(data: Prisma.MixtureCreateInput): Promise<MixtureDto> {
-        if (!this.exists({ name: data.name }))
-            throw new HttpError(400, 'Mixture already exists');
+    // async create(data: CreateMixtureDto): Promise<MixtureDto> {
+    //     return await this.prisma.$transaction(async (tx) => {
+    //         await tx.mixture.findUniqueOrThrow({
+    //             where: {
+    //                 name: data.name,
+    //             },
+    //         });
 
-        return this.prisma.mixture.create({ data });
-    }
+    //         const mixture = await tx.mixture.create({ data });
+
+    //         await Promise.all(
+    //             data.materials.map(async ({ rawMaterialId: id, quantity }) => {
+    //                 const rawMaterialQuantity =
+    //                     await tx.rawMaterial.findUniqueOrThrow({
+    //                         where: { id },
+    //                     });
+
+    //                 return rawMaterialQuantity.stock >= quantity;
+    //             })
+    //         );
+
+    //         await Promise.all(
+    //             data.materials.map(({ rawMaterialId, quantity }) =>
+    //                 tx.mixtureMaterial.create({
+    //                     data: {
+    //                         mixture: {
+    //                             connect: {
+    //                                 id: mixture.id,
+    //                             },
+    //                         },
+    //                         rawMaterial: {
+    //                             connect: {
+    //                                 id: rawMaterialId,
+    //                             },
+    //                         },
+    //                         quantity,
+    //                     },
+    //                 })
+    //             )
+    //         );
+    //     });
+    // }
 
     async findOne(where: Prisma.MixtureWhereUniqueInput): Promise<MixtureDto> {
         return this.prisma.mixture.findUniqueOrThrow({ where }).catch(() => {
