@@ -8,9 +8,9 @@ export class MixtureController {
         this.mixtureService = new MixtureService();
     }
 
-    async create(req: Request, res: Response) {
-        return res.status(200).json(await this.mixtureService.create(req.body));
-    }
+    // async create(req: Request, res: Response) {
+    //     return res.status(200).json(await this.mixtureService.create(req.body));
+    // }
 
     async findOne(req: Request, res: Response) {
         return res

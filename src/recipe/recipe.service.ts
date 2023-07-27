@@ -2,6 +2,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { RecipeDto } from './dtos/recipe.dto';
 import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
+import { CreateRecipeDto } from './dtos/create-recipe.dto';
 
 export class RecipeService {
     private readonly prisma: PrismaClient;
@@ -10,19 +11,42 @@ export class RecipeService {
         this.prisma = new PrismaClient();
     }
 
-    async create(data: Prisma.RecipeCreateInput): Promise<RecipeDto> {
-        if (!this.exists({ name: data.name }))
+    // TODO: Fix error when material does not exists
+    async create(data: CreateRecipeDto) {
+        if (await this.exists({ name: data.name }))
             throw new HttpError(409, 'Recipe already exists');
 
-        return await this.prisma.recipe.create({ data });
+        const recipe = await this.prisma.recipe.create({
+            data: {
+                ...data,
+                materials: undefined,
+            },
+        });
+
+        await Promise.all(
+            data.materials.map((material) =>
+                this.prisma.rawMaterialOnRecipe.create({
+                    data: {
+                        recipeId: recipe.id,
+                        rawMaterialId: material.materialId,
+                        quantity: material.quantity,
+                    },
+                })
+            )
+        );
+
+        return this.prisma.recipe.findUnique({
+            where: { id: recipe.id },
+            include: {
+                materials: true,
+            },
+        });
     }
 
     async findOne(where: Prisma.RecipeWhereUniqueInput): Promise<RecipeDto> {
-        return await this.prisma.recipe
-            .findUniqueOrThrow({ where })
-            .catch(() => {
-                throw new HttpError(404, 'Recipe not found');
-            });
+        return this.prisma.recipe.findUniqueOrThrow({ where }).catch(() => {
+            throw new HttpError(404, 'Recipe not found');
+        });
     }
 
     async findAll(
@@ -34,9 +58,9 @@ export class RecipeService {
     ): Promise<RecipeDto[]> {
         const { page, limit, cursor, where, orderBy } = params;
 
-        return await this.prisma.recipe.findMany({
-            take: page! - 1,
-            skip: limit,
+        return this.prisma.recipe.findMany({
+            take: limit,
+            skip: limit! * (page! - 1),
             where,
             orderBy,
             cursor,
@@ -51,7 +75,7 @@ export class RecipeService {
             throw new HttpError(409, 'Recipe already exists');
         }
 
-        return await this.prisma.recipe.update({
+        return this.prisma.recipe.update({
             data,
             where: { id },
         });

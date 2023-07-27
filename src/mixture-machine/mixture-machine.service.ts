@@ -1,24 +1,28 @@
 import { Prisma, PrismaClient } from '@prisma/client';
-import { MachineDto } from './dtos/machine.dto';
+import { MixtureMachineDto } from './dtos/mixture-machine.dto';
 import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
 
-export class MachineService {
+export class MixtureMachineService {
     private readonly prisma: PrismaClient;
 
     constructor() {
         this.prisma = new PrismaClient();
     }
 
-    async create(data: Prisma.MachineCreateInput): Promise<MachineDto> {
+    async create(
+        data: Prisma.MixtureMachineCreateInput
+    ): Promise<MixtureMachineDto> {
         if (!this.exists({ name: data.name }))
             throw new HttpError(400, 'Machine already exists');
 
-        return await this.prisma.machine.create({ data });
+        return this.prisma.mixtureMachine.create({ data });
     }
 
-    async findOne(where: Prisma.MachineWhereUniqueInput): Promise<MachineDto> {
-        return await this.prisma.machine
+    async findOne(
+        where: Prisma.MixtureMachineWhereUniqueInput
+    ): Promise<MixtureMachineDto> {
+        return this.prisma.mixtureMachine
             .findUniqueOrThrow({ where })
             .catch(() => {
                 throw new HttpError(404, 'Machine does not exists');
@@ -27,16 +31,16 @@ export class MachineService {
 
     async findAll(
         params: IPagination & {
-            cursor?: Prisma.MachineWhereUniqueInput;
-            where?: Prisma.MachineWhereInput;
-            orderBy?: Prisma.MachineOrderByWithAggregationInput;
+            cursor?: Prisma.MixtureMachineWhereUniqueInput;
+            where?: Prisma.MixtureMachineWhereInput;
+            orderBy?: Prisma.MixtureMachineOrderByWithAggregationInput;
         }
-    ): Promise<MachineDto[]> {
+    ): Promise<MixtureMachineDto[]> {
         const { page, limit, cursor, where, orderBy } = params;
 
-        return await this.prisma.machine.findMany({
-            take: page! - 1,
-            skip: limit,
+        return this.prisma.mixtureMachine.findMany({
+            skip: page! - 1,
+            take: limit,
             cursor,
             where,
             orderBy,
@@ -45,12 +49,12 @@ export class MachineService {
 
     async update(
         id: number,
-        data: Prisma.MachineUpdateInput
-    ): Promise<MachineDto> {
+        data: Prisma.MixtureMachineUpdateInput
+    ): Promise<MixtureMachineDto> {
         if (!this.exists({ id }))
             throw new HttpError(404, 'Machine does not exists');
 
-        return await this.prisma.machine.update({
+        return this.prisma.mixtureMachine.update({
             data,
             where: { id },
         });
@@ -60,10 +64,12 @@ export class MachineService {
         if (!this.exists({ id }))
             throw new HttpError(404, 'Machine does not exists');
 
-        await this.prisma.machine.delete({ where: { id } });
+        await this.prisma.mixtureMachine.delete({ where: { id } });
     }
 
-    private async exists(where: Prisma.MachineWhereUniqueInput) {
-        return (await this.prisma.machine.findUnique({ where })) !== null;
+    private async exists(where: Prisma.MixtureMachineWhereUniqueInput) {
+        return (
+            (await this.prisma.mixtureMachine.findUnique({ where })) !== null
+        );
     }
 }

@@ -1,29 +1,29 @@
-import { WarehouseService } from './warehouse.service';
 import { Request, Response } from 'express';
+import { RawMaterialService } from './raw-material.service';
 
-export class WarehouseController {
-    private readonly warehouseService: WarehouseService;
+export class RawMaterialController {
+    private readonly rawMaterialService: RawMaterialService;
 
     constructor() {
-        this.warehouseService = new WarehouseService();
+        this.rawMaterialService = new RawMaterialService();
     }
 
     async create(req: Request, res: Response) {
         return res
             .status(200)
-            .json(await this.warehouseService.create(req.body));
+            .json(await this.rawMaterialService.create(req.body));
     }
 
     async findOne(req: Request, res: Response) {
         return res.status(200).json(
-            await this.warehouseService.findOne({
+            await this.rawMaterialService.findOne({
                 id: Number(req.params.id),
             })
         );
     }
 
     async findAll(req: Request, res: Response) {
-        const warehouse = await this.warehouseService.findAll({
+        const warehouse = await this.rawMaterialService.findAll({
             page: Number(req.query.page ?? 1),
             limit: Number(req.query.limit ?? 15),
         });
@@ -34,7 +34,7 @@ export class WarehouseController {
         return res
             .status(200)
             .json(
-                await this.warehouseService.update(
+                await this.rawMaterialService.update(
                     Number(req.params.id),
                     req.body
                 )
@@ -44,6 +44,6 @@ export class WarehouseController {
     async delete(req: Request, res: Response) {
         return res
             .status(200)
-            .json(await this.warehouseService.delete(Number(req.params.id)));
+            .json(await this.rawMaterialService.delete(Number(req.params.id)));
     }
 }
