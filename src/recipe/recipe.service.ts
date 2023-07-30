@@ -11,35 +11,51 @@ export class RecipeService {
         this.prisma = new PrismaClient();
     }
 
-    // TODO: Fix error when material does not exists
     async create(data: CreateRecipeDto) {
-        if (await this.exists({ name: data.name }))
-            throw new HttpError(409, 'Recipe already exists');
-
-        const recipe = await this.prisma.recipe.create({
-            data: {
-                ...data,
-                materials: undefined,
-            },
-        });
-
-        await Promise.all(
-            data.materials.map((material) =>
-                this.prisma.rawMaterialOnRecipe.create({
-                    data: {
-                        recipeId: recipe.id,
-                        rawMaterialId: material.materialId,
-                        quantity: material.quantity,
-                    },
+        return this.prisma.$transaction(async (tx) => {
+            if (
+                await tx.recipe.findUniqueOrThrow({
+                    where: { name: data.name },
                 })
             )
-        );
+                throw new HttpError(409, 'Recipe already exists');
 
-        return this.prisma.recipe.findUnique({
-            where: { id: recipe.id },
-            include: {
-                materials: true,
-            },
+            const recipe = await tx.recipe.create({
+                data: {
+                    name: data.name,
+                    description: data.description,
+                    quantity: data.quantity,
+                },
+            });
+
+            await Promise.all(
+                data.materials.map(async (materialOnRecipe) => {
+                    const material = await tx.rawMaterial.findUniqueOrThrow({
+                        where: { id: materialOnRecipe.id },
+                    });
+
+                    if (!material)
+                        throw new HttpError(404, 'Raw material not found');
+
+                    return tx.rawMaterialOnRecipe.create({
+                        data: {
+                            ...data,
+                            rawMaterial: {
+                                connect: {
+                                    id: material.id,
+                                },
+                            },
+                            recipe: {
+                                connect: {
+                                    id: recipe.id,
+                                },
+                            },
+                        },
+                    });
+                })
+            );
+
+            return recipe;
         });
     }
 
