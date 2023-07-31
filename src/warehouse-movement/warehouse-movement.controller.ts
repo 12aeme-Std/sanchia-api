@@ -25,6 +25,13 @@ export class WarehouseMovementController {
         );
     }
 
+    async findByType(req: Request, res: Response) {
+        const movements = await this.warehouseMovementService.findByType(
+            req.body
+        );
+        return res.status(200).json(movements);
+    }
+
     async findAll(req: Request, res: Response) {
         const warehouseMovements = await this.warehouseMovementService.findAll({
             page: Number(req.query.page ?? 1),

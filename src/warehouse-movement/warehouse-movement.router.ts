@@ -13,6 +13,10 @@ router.post(
 );
 
 router.get(
+    '/type',
+    warehouseMovementController.findByType.bind(warehouseMovementController)
+);
+router.get(
     '/:id',
     warehouseMovementController.findOne.bind(warehouseMovementController)
 );
