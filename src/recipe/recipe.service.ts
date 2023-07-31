@@ -13,12 +13,11 @@ export class RecipeService {
 
     async create(data: CreateRecipeDto) {
         return this.prisma.$transaction(async (tx) => {
-            if (
-                await tx.recipe.findUniqueOrThrow({
-                    where: { name: data.name },
-                })
-            )
-                throw new HttpError(409, 'Recipe already exists');
+            const recipeExists = await tx.recipe.findUnique({
+                where: { name: data.name },
+            });
+
+            if (recipeExists) throw new HttpError(409, 'Recipe already exists');
 
             const recipe = await tx.recipe.create({
                 data: {
@@ -34,12 +33,8 @@ export class RecipeService {
                         where: { id: materialOnRecipe.id },
                     });
 
-                    if (!material)
-                        throw new HttpError(404, 'Raw material not found');
-
                     return tx.rawMaterialOnRecipe.create({
                         data: {
-                            ...data,
                             rawMaterial: {
                                 connect: {
                                     id: material.id,
@@ -50,12 +45,33 @@ export class RecipeService {
                                     id: recipe.id,
                                 },
                             },
+                            quantity: materialOnRecipe.quantity,
                         },
                     });
                 })
             );
 
-            return recipe;
+            return tx.recipe.findUniqueOrThrow({
+                where: { id: recipe.id },
+                select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    quantity: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    materials: {
+                        select: {
+                            quantity: true,
+                            rawMaterial: {
+                                select: {
+                                    name: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            });
         });
     }
 
@@ -97,9 +113,10 @@ export class RecipeService {
         });
     }
 
+    // TODO: Check how to delete this
     async delete(id: number): Promise<void> {
-        if (!this.exists({ id })) {
-            throw new HttpError(409, 'Recipe already exists');
+        if (!(await this.exists({ id }))) {
+            throw new HttpError(409, 'Recipe does not exists exists');
         }
 
         await this.prisma.recipe.delete({ where: { id } });

@@ -3,15 +3,25 @@ import { RawMaterialDto } from './dtos/raw-material.dto';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { HttpError } from '@common/http-error';
 import { CreateRawMaterialDto } from './dtos/create-raw-material.dto';
+import { WarehouseService } from '@warehouse/warehouse.service';
 
 export class RawMaterialService {
     private readonly prisma: PrismaClient;
+    private readonly warehouseService: WarehouseService;
 
     constructor() {
         this.prisma = new PrismaClient();
+        this.warehouseService = new WarehouseService();
     }
 
     async create(data: CreateRawMaterialDto): Promise<RawMaterialDto> {
+        if (await this.exists({ name: data.name })) {
+            throw new HttpError(409, 'Raw material already exists');
+        }
+
+        if (!(await this.warehouseService.findOne({ id: data.warehouse })))
+            throw new HttpError(404, 'Warehouse does not exists');
+
         return this.prisma.rawMaterial.create({
             data: {
                 ...data,
@@ -72,16 +82,5 @@ export class RawMaterialService {
 
     private async exists(where: Prisma.RawMaterialWhereUniqueInput) {
         return (await this.prisma.rawMaterial.findUnique({ where })) !== null;
-    }
-
-    async enoughStock(
-        needed: number,
-        where: Prisma.RawMaterialWhereUniqueInput
-    ) {
-        const { stock } = await this.prisma.rawMaterial.findUniqueOrThrow({
-            where,
-        });
-
-        return stock >= needed;
     }
 }
