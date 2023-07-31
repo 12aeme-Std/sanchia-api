@@ -13,7 +13,7 @@ export class MixtureMachineService {
     async create(
         data: Prisma.MixtureMachineCreateInput
     ): Promise<MixtureMachineDto> {
-        if (!this.exists({ name: data.name }))
+        if (await this.exists({ name: data.name }))
             throw new HttpError(400, 'Machine already exists');
 
         return this.prisma.mixtureMachine.create({ data });
@@ -61,7 +61,7 @@ export class MixtureMachineService {
     }
 
     async delete(id: number): Promise<void> {
-        if (!this.exists({ id }))
+        if (!(await this.exists({ id })))
             throw new HttpError(404, 'Machine does not exists');
 
         await this.prisma.mixtureMachine.delete({ where: { id } });

@@ -13,7 +13,7 @@ export class ManufactureMachineService {
     async create(
         data: Prisma.ManufactureMachineCreateInput
     ): Promise<ManufactureMachineDto> {
-        if (!this.exists({ name: data.name }))
+        if (await this.exists({ name: data.name }))
             throw new HttpError(400, 'Machine already exists');
 
         return this.prisma.manufactureMachine.create({ data });
@@ -61,7 +61,7 @@ export class ManufactureMachineService {
     }
 
     async delete(id: number): Promise<void> {
-        if (!this.exists({ id }))
+        if (!(await this.exists({ id })))
             throw new HttpError(404, 'Machine does not exists');
 
         await this.prisma.manufactureMachine.delete({ where: { id } });

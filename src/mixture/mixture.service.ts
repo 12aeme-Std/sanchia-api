@@ -3,6 +3,7 @@ import { MixtureDto } from './dtos/mixture.dtos';
 import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { CreateMixtureDto } from './dtos/create-mixture.dto';
+import { CreateResultDto } from './dtos/create-result.dto';
 
 export class MixtureService {
     private readonly prisma: PrismaClient;
@@ -20,6 +21,16 @@ export class MixtureService {
             const machine = await tx.mixtureMachine.findUniqueOrThrow({
                 where: { id: data.mixtureMachineId },
             });
+
+            const mixtureExists = await tx.mixture.findUnique({
+                where: { name: data.name },
+            });
+
+            if (mixtureExists)
+                throw new HttpError(
+                    400,
+                    `Mixture with name ${data.name} already exists`
+                );
 
             const mixture = await tx.mixture.create({
                 data: {
@@ -42,6 +53,12 @@ export class MixtureService {
                     const material = await tx.rawMaterial.findUniqueOrThrow({
                         where: { id: materialOnMixture.rawMaterialId },
                     });
+
+                    if (material.stock < recipe.quantity)
+                        throw new HttpError(
+                            400,
+                            'Raw material stock is not enough'
+                        );
 
                     return tx.rawMaterialOnMixture.create({
                         data: {
@@ -112,6 +129,20 @@ export class MixtureService {
             throw new HttpError(404, 'Mixture does not exists');
 
         await this.prisma.mixture.delete({ where: { id } });
+    }
+
+    async createResult(data: CreateResultDto) {
+        return this.prisma.mixtureResult.create({
+            data: {
+                mixture: {
+                    connect: {
+                        id: data.mixtureId,
+                    },
+                },
+                finishedAt: data.finishedAt,
+                quantity: data.quantity,
+            },
+        });
     }
 
     private async exists(where: Prisma.MixtureWhereUniqueInput) {
