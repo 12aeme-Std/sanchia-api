@@ -2,7 +2,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { CreateManufactureDto } from './dtos/create-manufacture.dto';
-import { CreateResultDto } from './dtos/create-result.dto';
+import { CreateManufactureResultDto } from './dtos/create-result.dto';
 
 export class ManufactureService {
     private readonly prisma: PrismaClient;
@@ -128,7 +128,7 @@ export class ManufactureService {
         });
     }
 
-    async createResult(data: CreateResultDto) {
+    async createResult(data: CreateManufactureResultDto) {
         return this.prisma.manufactureResult.create({
             data: {
                 manufacture: {
