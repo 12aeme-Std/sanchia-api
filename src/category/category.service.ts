@@ -2,6 +2,8 @@ import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { CategoryDto } from './dtos/category.dto';
+import { CreateCategoryDto } from './dtos/create-category.dto';
+import { UpdateCategoryDto } from './dtos/update-category.dto';
 
 // TODO: Check what roles can handle categories
 export class CategoryService {
@@ -11,7 +13,7 @@ export class CategoryService {
         this.prisma = new PrismaClient();
     }
 
-    async create(data: Prisma.CategoryCreateInput): Promise<CategoryDto> {
+    async create(data: CreateCategoryDto): Promise<CategoryDto> {
         if (await this.exists({ name: data.name }))
             throw new HttpError(409, 'Category already exists');
 
@@ -46,10 +48,7 @@ export class CategoryService {
         });
     }
 
-    async update(
-        id: number,
-        data: Prisma.CategoryUpdateInput
-    ): Promise<CategoryDto> {
+    async update(id: number, data: UpdateCategoryDto): Promise<CategoryDto> {
         if (!(await this.exists({ id })))
             throw new HttpError(404, 'Category does not exists');
 

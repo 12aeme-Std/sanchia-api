@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { CategoryService } from './category.service';
+import validateSchema from '@middlewares/validation.mid';
+import { createCategorySchema } from './category.validator';
 export class CategoryController {
     private readonly categoryService: CategoryService;
 
@@ -8,6 +10,8 @@ export class CategoryController {
     }
 
     async create(req: Request, res: Response) {
+        validateSchema(req.body, createCategorySchema);
+
         return res
             .status(200)
             .json(await this.categoryService.create(req.body));
@@ -31,6 +35,8 @@ export class CategoryController {
     }
 
     async update(req: Request, res: Response) {
+        validateSchema(req.body, createCategorySchema);
+
         return res
             .status(200)
             .json(
