@@ -2,62 +2,90 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { MixtureDto } from './dtos/mixture.dtos';
 import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
-import { RawMaterialService } from '@raw-material/raw-material.service';
-// import { CreateMixtureDto } from './dtos/create-mixture.dto';
+import { CreateMixtureDto } from './dtos/create-mixture.dto';
+import { CreateResultDto } from './dtos/create-result.dto';
 
 export class MixtureService {
     private readonly prisma: PrismaClient;
-    private readonly rawMaterialService: RawMaterialService;
 
     constructor() {
         this.prisma = new PrismaClient();
-        this.rawMaterialService = new RawMaterialService();
     }
 
-    // TODO: Connect with recipes
-    // TODO: Check raw material to allow this method
-    // async create(data: CreateMixtureDto): Promise<MixtureDto> {
-    //     return await this.prisma.$transaction(async (tx) => {
-    //         await tx.mixture.findUniqueOrThrow({
-    //             where: {
-    //                 name: data.name,
-    //             },
-    //         });
+    async create(data: CreateMixtureDto) {
+        return this.prisma.$transaction(async (tx) => {
+            const recipe = await tx.recipe.findUniqueOrThrow({
+                where: { id: data.recipeId },
+            });
 
-    //         const mixture = await tx.mixture.create({ data });
+            const machine = await tx.mixtureMachine.findUniqueOrThrow({
+                where: { id: data.mixtureMachineId },
+            });
 
-    //         await Promise.all(
-    //             data.materials.map(async ({ rawMaterialId: id, quantity }) => {
-    //                 const rawMaterialQuantity =
-    //                     await tx.rawMaterial.findUniqueOrThrow({
-    //                         where: { id },
-    //                     });
+            const mixtureExists = await tx.mixture.findUnique({
+                where: { name: data.name },
+            });
 
-    //                 return rawMaterialQuantity.stock >= quantity;
-    //             })
-    //         );
+            if (mixtureExists)
+                throw new HttpError(
+                    400,
+                    `Mixture with name ${data.name} already exists`
+                );
 
-    //         await Promise.all(
-    //             data.materials.map(({ rawMaterialId, quantity }) =>
-    //                 tx.mixtureMaterial.create({
-    //                     data: {
-    //                         mixture: {
-    //                             connect: {
-    //                                 id: mixture.id,
-    //                             },
-    //                         },
-    //                         rawMaterial: {
-    //                             connect: {
-    //                                 id: rawMaterialId,
-    //                             },
-    //                         },
-    //                         quantity,
-    //                     },
-    //                 })
-    //             )
-    //         );
-    //     });
-    // }
+            const mixture = await tx.mixture.create({
+                data: {
+                    name: data.name,
+                    recipe: {
+                        connect: {
+                            id: recipe.id,
+                        },
+                    },
+                    mixtureMachine: {
+                        connect: {
+                            id: machine.id,
+                        },
+                    },
+                },
+            });
+
+            await Promise.all(
+                data.materials.map(async (materialOnMixture) => {
+                    const material = await tx.rawMaterial.findUniqueOrThrow({
+                        where: { id: materialOnMixture.rawMaterialId },
+                    });
+
+                    if (material.stock < recipe.quantity)
+                        throw new HttpError(
+                            400,
+                            'Raw material stock is not enough'
+                        );
+
+                    return tx.rawMaterialOnMixture.create({
+                        data: {
+                            mixture: {
+                                connect: {
+                                    id: mixture.id,
+                                },
+                            },
+                            rawMaterial: {
+                                connect: {
+                                    id: material.id,
+                                },
+                            },
+                            quantity: materialOnMixture.quantity,
+                        },
+                    });
+                })
+            );
+
+            return tx.mixture.findUniqueOrThrow({
+                where: { id: mixture.id },
+                include: {
+                    materials: true,
+                },
+            });
+        });
+    }
 
     async findOne(where: Prisma.MixtureWhereUniqueInput): Promise<MixtureDto> {
         return this.prisma.mixture.findUniqueOrThrow({ where }).catch(() => {
@@ -101,6 +129,20 @@ export class MixtureService {
             throw new HttpError(404, 'Mixture does not exists');
 
         await this.prisma.mixture.delete({ where: { id } });
+    }
+
+    async createResult(data: CreateResultDto) {
+        return this.prisma.mixtureResult.create({
+            data: {
+                mixture: {
+                    connect: {
+                        id: data.mixtureId,
+                    },
+                },
+                finishedAt: data.finishedAt,
+                quantity: data.quantity,
+            },
+        });
     }
 
     private async exists(where: Prisma.MixtureWhereUniqueInput) {

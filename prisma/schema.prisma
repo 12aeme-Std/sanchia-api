@@ -269,13 +269,12 @@ model Mixture {
 
   materials    RawMaterialOnMixture[]
   results      MixtureResult[]
-  manufactures ResourcesOnManufacture[]
 
   @@map("mixture")
 }
 
 model RawMaterialOnMixture {
-  mixture   Mixture @relation(fields: [mixtureId], references: [id])
+  mixture   Mixture @relation(fields: [mixtureId], references: [id], onDelete: Cascade)
   mixtureId Int     @map("mixture_id")
 
   rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
@@ -290,11 +289,13 @@ model RawMaterialOnMixture {
 model MixtureResult {
   id Int @id @default(autoincrement())
 
-  mixture   Mixture @relation(fields: [mixtureId], references: [id])
+  mixture   Mixture @relation(fields: [mixtureId], references: [id], onDelete: Cascade)
   mixtureId Int     @map("mixture_id")
 
   quantity   Int
   finishedAt DateTime @default(now()) @map("finished_at")
+
+  manufactures ResourcesOnManufacture[]
 
   @@map("mixture_result")
 }
@@ -369,11 +370,11 @@ model ResourcesOnManufacture {
   manufacture   Manufacture @relation(fields: [manufactureId], references: [id])
   manufactureId Int         @map("manufacture_id")
 
-  mixture   Mixture? @relation(fields: [mixtureId], references: [id])
-  mixtureId Int      @map("mixture_id")
+  mixtureResult   MixtureResult? @relation(fields: [mixtureResultId], references: [id])
+  mixtureResultId Int?      @map("mixture_id")
 
   rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id])
-  rawMaterialId Int          @map("raw_material_id")
+  rawMaterialId Int?          @map("raw_material_id")
 
   quantity Int
 

@@ -11,35 +11,67 @@ export class RecipeService {
         this.prisma = new PrismaClient();
     }
 
-    // TODO: Fix error when material does not exists
     async create(data: CreateRecipeDto) {
-        if (await this.exists({ name: data.name }))
-            throw new HttpError(409, 'Recipe already exists');
+        return this.prisma.$transaction(async (tx) => {
+            const recipeExists = await tx.recipe.findUnique({
+                where: { name: data.name },
+            });
 
-        const recipe = await this.prisma.recipe.create({
-            data: {
-                ...data,
-                materials: undefined,
-            },
-        });
+            if (recipeExists) throw new HttpError(409, 'Recipe already exists');
 
-        await Promise.all(
-            data.materials.map((material) =>
-                this.prisma.rawMaterialOnRecipe.create({
-                    data: {
-                        recipeId: recipe.id,
-                        rawMaterialId: material.materialId,
-                        quantity: material.quantity,
-                    },
+            const recipe = await tx.recipe.create({
+                data: {
+                    name: data.name,
+                    description: data.description,
+                    quantity: data.quantity,
+                },
+            });
+
+            await Promise.all(
+                data.materials.map(async (materialOnRecipe) => {
+                    const material = await tx.rawMaterial.findUniqueOrThrow({
+                        where: { id: materialOnRecipe.id },
+                    });
+
+                    return tx.rawMaterialOnRecipe.create({
+                        data: {
+                            rawMaterial: {
+                                connect: {
+                                    id: material.id,
+                                },
+                            },
+                            recipe: {
+                                connect: {
+                                    id: recipe.id,
+                                },
+                            },
+                            quantity: materialOnRecipe.quantity,
+                        },
+                    });
                 })
-            )
-        );
+            );
 
-        return this.prisma.recipe.findUnique({
-            where: { id: recipe.id },
-            include: {
-                materials: true,
-            },
+            return tx.recipe.findUniqueOrThrow({
+                where: { id: recipe.id },
+                select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    quantity: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    materials: {
+                        select: {
+                            quantity: true,
+                            rawMaterial: {
+                                select: {
+                                    name: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            });
         });
     }
 
@@ -81,9 +113,10 @@ export class RecipeService {
         });
     }
 
+    // TODO: Check how to delete this
     async delete(id: number): Promise<void> {
-        if (!this.exists({ id })) {
-            throw new HttpError(409, 'Recipe already exists');
+        if (!(await this.exists({ id }))) {
+            throw new HttpError(409, 'Recipe does not exists exists');
         }
 
         await this.prisma.recipe.delete({ where: { id } });

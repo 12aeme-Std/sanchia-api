@@ -32,8 +32,20 @@ export class AuthService {
 
         if (!user) throw new HttpError(401, 'Unauthorized');
 
-        return {
-            token: jwt.sign(user, process.env.JWT_SECRET!),
-        };
+        const token = jwt.sign(
+            { id: user.id, role: user.role },
+            process.env.JWT_SECRET!
+        );
+
+        await this.prisma.user.update({
+            where: {
+                id: user.id,
+            },
+            data: {
+                accessToken: token,
+            },
+        });
+
+        return { token };
     }
 }

@@ -1,6 +1,9 @@
 export interface CreateMixtureDto {
-    recipeId: number;
     name: string;
+
+    mixtureMachineId: number;
+    recipeId: number;
+
     materials: Array<{
         rawMaterialId: number;
         quantity: number;

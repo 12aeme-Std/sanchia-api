@@ -1,8 +1,9 @@
-import { Prisma } from '@prisma/client';
-
-export type CreateRecipeDto = {
+export interface CreateRecipeDto {
+    name: string;
+    description: string;
+    quantity: number;
     materials: Array<{
-        materialId: number;
+        id: number;
         quantity: number;
     }>;
-} & Omit<Prisma.RecipeCreateInput, 'materials'>;
+}
