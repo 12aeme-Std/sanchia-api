@@ -1,5 +1,10 @@
 import { Request, Response } from 'express';
 import { RawMaterialService } from './raw-material.service';
+import validateSchema from '@middlewares/validation.mid';
+import {
+    CreateRawMaterialSchema,
+    UpdateRawMaterialSchema,
+} from './raw-material.validator';
 
 export class RawMaterialController {
     private readonly rawMaterialService: RawMaterialService;
@@ -9,6 +14,8 @@ export class RawMaterialController {
     }
 
     async create(req: Request, res: Response) {
+        validateSchema(req.body, CreateRawMaterialSchema);
+
         return res
             .status(200)
             .json(await this.rawMaterialService.create(req.body));
@@ -31,6 +38,7 @@ export class RawMaterialController {
     }
 
     async update(req: Request, res: Response) {
+        validateSchema(req.body, UpdateRawMaterialSchema);
         return res
             .status(200)
             .json(
