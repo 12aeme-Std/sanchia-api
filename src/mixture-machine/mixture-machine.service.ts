@@ -13,19 +13,22 @@ export class MixtureMachineService {
     async create(
         data: Prisma.MixtureMachineCreateInput
     ): Promise<MixtureMachineDto> {
+        // Check if a mixture machine with the same name already exists
         if (await this.exists({ name: data.name }))
             throw new HttpError(400, 'Machine already exists');
 
+        // Create a new mixture machine and return the created data
         return this.prisma.mixtureMachine.create({ data });
     }
 
     async findOne(
         where: Prisma.MixtureMachineWhereUniqueInput
     ): Promise<MixtureMachineDto> {
+        // Find and return a specific mixture machine based on the provided unique identifier
         return this.prisma.mixtureMachine
             .findUniqueOrThrow({ where })
             .catch(() => {
-                throw new HttpError(404, 'Machine does not exists');
+                throw new HttpError(404, 'Machine does not exist');
             });
     }
 
@@ -38,6 +41,7 @@ export class MixtureMachineService {
     ): Promise<MixtureMachineDto[]> {
         const { page, limit, cursor, where, orderBy } = params;
 
+        // Find and return multiple mixture machines based on pagination and filtering parameters
         return this.prisma.mixtureMachine.findMany({
             skip: page! - 1,
             take: limit,
@@ -51,9 +55,11 @@ export class MixtureMachineService {
         id: number,
         data: Prisma.MixtureMachineUpdateInput
     ): Promise<MixtureMachineDto> {
-        if (!this.exists({ id }))
-            throw new HttpError(404, 'Machine does not exists');
+        // Check if the mixture machine with the provided ID exists
+        if (!(await this.exists({ id })))
+            throw new HttpError(404, 'Machine does not exist');
 
+        // Update the mixture machine and return the updated data
         return this.prisma.mixtureMachine.update({
             data,
             where: { id },
@@ -61,12 +67,15 @@ export class MixtureMachineService {
     }
 
     async delete(id: number): Promise<void> {
+        // Check if the mixture machine with the provided ID exists
         if (!(await this.exists({ id })))
-            throw new HttpError(404, 'Machine does not exists');
+            throw new HttpError(404, 'Machine does not exist');
 
+        // Delete the mixture machine from the database
         await this.prisma.mixtureMachine.delete({ where: { id } });
     }
 
+    // Private method to check if a mixture machine exists based on the provided query
     private async exists(where: Prisma.MixtureMachineWhereUniqueInput) {
         return (
             (await this.prisma.mixtureMachine.findUnique({ where })) !== null
