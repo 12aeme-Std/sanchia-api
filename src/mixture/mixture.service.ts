@@ -3,7 +3,7 @@ import { MixtureDto } from './dtos/mixture.dtos';
 import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { CreateMixtureDto } from './dtos/create-mixture.dto';
-import { CreateResultDto } from './dtos/create-result.dto';
+import { CreateMixtureResultDto } from './dtos/create-result.dto';
 
 export class MixtureService {
     private readonly prisma: PrismaClient;
@@ -131,7 +131,7 @@ export class MixtureService {
         await this.prisma.mixture.delete({ where: { id } });
     }
 
-    async createResult(data: CreateResultDto) {
+    async createResult(data: CreateMixtureResultDto) {
         return this.prisma.mixtureResult.create({
             data: {
                 mixture: {

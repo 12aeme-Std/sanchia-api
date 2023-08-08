@@ -1,5 +1,10 @@
+import validateSchema from '@middlewares/validation.mid';
 import { ManufactureService } from './manufacture.service';
 import { Request, Response } from 'express';
+import {
+    createManufactureSchema,
+    createResultSchema,
+} from './manufacture.validator';
 
 export class ManufactureController {
     private readonly manufactureService: ManufactureService;
@@ -9,6 +14,8 @@ export class ManufactureController {
     }
 
     async create(req: Request, res: Response) {
+        validateSchema(req.body, createManufactureSchema);
+
         return res
             .status(200)
             .json(await this.manufactureService.create(req.body));
@@ -32,6 +39,8 @@ export class ManufactureController {
     }
 
     async createResult(req: Request, res: Response) {
+        validateSchema(req.body, createResultSchema);
+
         return res
             .status(200)
             .json(await this.manufactureService.createResult(req.body));
