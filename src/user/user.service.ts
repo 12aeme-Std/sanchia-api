@@ -12,12 +12,16 @@ export class UserService {
     }
 
     async register(data: Prisma.UserCreateInput): Promise<UserDto> {
+        // Check if a user with the same email already exists
         const alreadyExists = await this.prisma.user.findUnique({
             where: { email: data.email },
         });
 
-        if (alreadyExists) throw new HttpError(409, 'Account already exists');
+        if (alreadyExists) {
+            throw new HttpError(409, 'Account already exists');
+        }
 
+        // Hash the password using bcrypt and create a new user
         const hashedPwd = await bcrypt.hash(
             data.password,
             Number(process.env.SALT ?? 10)
@@ -32,6 +36,7 @@ export class UserService {
     }
 
     async findOne(where: Prisma.UserWhereUniqueInput): Promise<UserDto | null> {
+        // Find and return a specific user based on the provided unique identifier
         return this.prisma.user.findUniqueOrThrow({ where }).catch(() => {
             throw new HttpError(404, 'User not found');
         });
@@ -46,6 +51,7 @@ export class UserService {
     ): Promise<UserDto[]> {
         const { page, limit, cursor, where, orderBy } = params;
 
+        // Find and return multiple users based on pagination and filtering parameters
         return this.prisma.user.findMany({
             skip: page! - 1,
             take: limit,
@@ -62,14 +68,17 @@ export class UserService {
         });
     }
 
-    // TODO: Check who can udpate an user
+    // TODO: Check who can update a user
     async update(
         id: number,
         data: Prisma.UserUpdateInput
     ): Promise<UserDto | null> {
-        if (!(await this.userExists({ id })))
+        // Check if the user with the provided ID exists
+        if (!(await this.userExists({ id }))) {
             throw new HttpError(404, 'User not found');
+        }
 
+        // Hash the new password if provided, and update the user
         const hashedPwd = data.password
             ? await bcrypt.hash(
                   data.password as string,
@@ -95,14 +104,18 @@ export class UserService {
         });
     }
 
-    // TODO: Check who can delete an user
+    // TODO: Check who can delete a user
     async delete(id: number): Promise<void> {
-        if (!(await this.userExists({ id })))
+        // Check if the user with the provided ID exists
+        if (!(await this.userExists({ id }))) {
             throw new HttpError(404, 'User not found');
+        }
 
+        // Delete the user from the database
         await this.prisma.user.delete({ where: { id } });
     }
 
+    // Private method to check if a user exists based on the provided query
     private async userExists(where: Prisma.UserWhereUniqueInput) {
         return (await this.prisma.user.findUnique({ where })) !== null;
     }

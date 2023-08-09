@@ -7,16 +7,20 @@ import { CreateManufactureResultDto } from './dtos/create-result.dto';
 export class ManufactureService {
     private readonly prisma: PrismaClient;
 
+    // Constructor: Initializes the PrismaClient instance
     constructor() {
         this.prisma = new PrismaClient();
     }
 
+    // Method to create a new manufacture
     async create(data: CreateManufactureDto) {
         return this.prisma.$transaction(async (tx) => {
+            // Retrieve the associated machine for the manufacture
             const machine = await tx.manufactureMachine.findUniqueOrThrow({
                 where: { id: data.manufactureMachineId },
             });
 
+            // Check if a manufacture with the same name already exists
             const manufactureExists = await tx.manufacture.findUnique({
                 where: { name: data.name },
             });
@@ -27,6 +31,7 @@ export class ManufactureService {
                     `Manufacture with name ${data.name} already exists`
                 );
 
+            // Create the manufacture and connect it with the machine
             const manufacture = await tx.manufacture.create({
                 data: {
                     name: data.name,
@@ -38,6 +43,7 @@ export class ManufactureService {
                 },
             });
 
+            // Create and connect resources to the manufacture
             await Promise.all(
                 data.resources.map(async (materialOnManufacture) => {
                     if (materialOnManufacture.rawMaterialId) {
@@ -61,7 +67,6 @@ export class ManufactureService {
                                         id: material.id,
                                     },
                                 },
-
                                 quantity: materialOnManufacture.quantity,
                             },
                         });
@@ -85,7 +90,6 @@ export class ManufactureService {
                                         id: mixtureResult.id,
                                     },
                                 },
-
                                 quantity: materialOnManufacture.quantity,
                             },
                         });
@@ -93,6 +97,7 @@ export class ManufactureService {
                 })
             );
 
+            // Return the created manufacture with associated resources
             return tx.manufacture.findUniqueOrThrow({
                 where: { id: manufacture.id },
                 include: {
@@ -102,14 +107,16 @@ export class ManufactureService {
         });
     }
 
+    // Method to find a manufacture by its unique identifier
     async findOne(where: Prisma.ManufactureWhereUniqueInput) {
         return this.prisma.manufacture
             .findUniqueOrThrow({ where })
             .catch(() => {
-                throw new HttpError(404, 'Manufacture does not exists');
+                throw new HttpError(404, 'Manufacture does not exist');
             });
     }
 
+    // Method to find all manufactures based on pagination and filtering parameters
     async findAll(
         params: IPagination & {
             cursor?: Prisma.ManufactureWhereUniqueInput;
@@ -119,6 +126,7 @@ export class ManufactureService {
     ) {
         const { page, limit, cursor, where, orderBy } = params;
 
+        // Find and return multiple manufactures based on pagination and filtering parameters
         return this.prisma.manufacture.findMany({
             skip: page! - 1,
             take: limit,
@@ -128,6 +136,7 @@ export class ManufactureService {
         });
     }
 
+    // Method to create a manufacture result
     async createResult(data: CreateManufactureResultDto) {
         return this.prisma.manufactureResult.create({
             data: {
