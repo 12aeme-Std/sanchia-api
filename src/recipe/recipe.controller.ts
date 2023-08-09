@@ -1,5 +1,7 @@
+import validateSchema from '@middlewares/validation.mid';
 import { RecipeService } from './recipe.service';
 import { Request, Response } from 'express';
+import { CreateRecipeSchema, UpdateRecipeSchema } from './recipe.validator';
 
 export class RecipeController {
     private readonly recipeService: RecipeService;
@@ -9,6 +11,7 @@ export class RecipeController {
     }
 
     async create(req: Request, res: Response) {
+        validateSchema(req.body, CreateRecipeSchema);
         return res.status(200).json(await this.recipeService.create(req.body));
     }
 
@@ -30,6 +33,7 @@ export class RecipeController {
     }
 
     async update(req: Request, res: Response) {
+        validateSchema(req.body, UpdateRecipeSchema);
         return res
             .status(200)
             .json(

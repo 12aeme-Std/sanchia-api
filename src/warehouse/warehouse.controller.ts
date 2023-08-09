@@ -1,5 +1,10 @@
+import validateSchema from '@middlewares/validation.mid';
 import { WarehouseService } from './warehouse.service';
 import { Request, Response } from 'express';
+import {
+    CreateWarehouseSchema,
+    UpdateWarehouseSchema,
+} from './warehouse.validator';
 
 export class WarehouseController {
     private readonly warehouseService: WarehouseService;
@@ -9,6 +14,7 @@ export class WarehouseController {
     }
 
     async create(req: Request, res: Response) {
+        validateSchema(req.body, CreateWarehouseSchema);
         return res
             .status(200)
             .json(await this.warehouseService.create(req.body));
@@ -31,6 +37,8 @@ export class WarehouseController {
     }
 
     async update(req: Request, res: Response) {
+        validateSchema(req.body, UpdateWarehouseSchema);
+
         return res
             .status(200)
             .json(

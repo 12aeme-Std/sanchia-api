@@ -11,7 +11,7 @@ export class WarehouseService {
     }
 
     async create(data: Prisma.WarehouseCreateInput): Promise<WarehouseDto> {
-        if (!this.exists({ name: data.name })) {
+        if (await this.exists({ name: data.name })) {
             throw new HttpError(409, 'Warehouse already exists');
         }
 

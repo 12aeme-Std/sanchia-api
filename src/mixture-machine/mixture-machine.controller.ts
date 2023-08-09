@@ -1,5 +1,10 @@
+import validateSchema from '@middlewares/validation.mid';
 import { MixtureMachineService } from './mixture-machine.service';
 import { Request, Response } from 'express';
+import {
+    CreateMixtureMachineSchema,
+    UpdateMixtureMachineSchema,
+} from './mixture-machine.validator';
 
 export class MixtureMachineController {
     private readonly mixtureMachineService: MixtureMachineService;
@@ -9,6 +14,8 @@ export class MixtureMachineController {
     }
 
     async create(req: Request, res: Response) {
+        validateSchema(req.body, CreateMixtureMachineSchema);
+
         return res
             .status(200)
             .json(await this.mixtureMachineService.create(req.body));
@@ -32,6 +39,8 @@ export class MixtureMachineController {
     }
 
     async update(req: Request, res: Response) {
+        validateSchema(req.body, UpdateMixtureMachineSchema);
+
         return res
             .status(200)
             .json(

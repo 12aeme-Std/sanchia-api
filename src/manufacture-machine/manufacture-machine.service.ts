@@ -2,6 +2,8 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { ManufactureMachineDto } from './dtos/manufacture-machine.dto';
 import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
+import { CreateManufactureMachineDto } from './dtos/create-manufacture-machine.dto';
+import { UpdateManufactureMachineDto } from './dtos/update-manufacture-machine.dto';
 
 export class ManufactureMachineService {
     private readonly prisma: PrismaClient;
@@ -11,9 +13,9 @@ export class ManufactureMachineService {
     }
 
     async create(
-        data: Prisma.ManufactureMachineCreateInput
+        data: CreateManufactureMachineDto
     ): Promise<ManufactureMachineDto> {
-        if (!this.exists({ name: data.name }))
+        if (await this.exists({ name: data.name }))
             throw new HttpError(400, 'Machine already exists');
 
         return this.prisma.manufactureMachine.create({ data });
@@ -49,7 +51,7 @@ export class ManufactureMachineService {
 
     async update(
         id: number,
-        data: Prisma.ManufactureMachineUpdateInput
+        data: UpdateManufactureMachineDto
     ): Promise<ManufactureMachineDto> {
         if (!this.exists({ id }))
             throw new HttpError(404, 'Machine does not exists');
@@ -61,7 +63,7 @@ export class ManufactureMachineService {
     }
 
     async delete(id: number): Promise<void> {
-        if (!this.exists({ id }))
+        if (!(await this.exists({ id })))
             throw new HttpError(404, 'Machine does not exists');
 
         await this.prisma.manufactureMachine.delete({ where: { id } });

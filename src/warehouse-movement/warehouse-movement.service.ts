@@ -1,8 +1,12 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import {
+    Prisma,
+    PrismaClient,
+    WarehouseMovement,
+    WarehouseType,
+} from '@prisma/client';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { CreateMovementDto } from './dtos/create-movement.dto';
-
-// TODO: Add method to filter by type
+import { HttpError } from '@common/http-error';
 
 export class WarehouseMovementService {
     private readonly prisma: PrismaClient;
@@ -11,54 +15,134 @@ export class WarehouseMovementService {
         this.prisma = new PrismaClient();
     }
 
-    // TODO: Update stock
-    // TODO: Infer warehouse origin from raw material
     async create(data: CreateMovementDto) {
-        return this.prisma.warehouseMovement.create({
-            data: {
-                user: {
-                    connect: { id: data.userId },
-                },
-                quantity: data.quantity,
-                type: data.type,
-                warehouseOrigin: {
-                    connect: { id: data.warehouseOriginId },
-                },
-                warehouseDestination:
-                    data.warehouseDestinationId !== undefined
-                        ? {
-                              connect: {
-                                  id: data.warehouseDestinationId,
-                              },
-                          }
-                        : undefined,
-                mixtureMachine:
-                    data.mixMachineId !== undefined
-                        ? {
-                              connect: {
-                                  id: data.mixMachineId,
-                              },
-                          }
-                        : undefined,
-                manufactureMachine:
-                    data.manufactureMachineId !== undefined
-                        ? {
-                              connect: {
-                                  id: data.manufactureMachineId,
-                              },
-                          }
-                        : undefined,
-                rawMaterial: {
-                    connect: {
-                        id: data.rawMaterialId,
+        return this.prisma.$transaction(async (tx) => {
+            const rawMaterial = await tx.rawMaterial
+                .findUniqueOrThrow({ where: { id: data.rawMaterialId } })
+                .catch(() => {
+                    throw new HttpError(404, 'Raw material does not exists');
+                });
+
+            if (rawMaterial.stock < data.quantity)
+                throw new HttpError(400, 'Raw material stock is not enough');
+
+            if (
+                !data.warehouseDestinationId &&
+                !data.mixMachineId &&
+                !data.manufactureMachineId
+            )
+                throw new HttpError(400, 'p');
+
+            let mov: WarehouseMovement;
+
+            if (data.warehouseDestinationId) {
+                const { id } = await tx.warehouse.findUniqueOrThrow({
+                    where: { id: data.warehouseDestinationId },
+                });
+
+                mov = await tx.warehouseMovement.create({
+                    data: {
+                        user: {
+                            connect: { id: data.userId },
+                        },
+                        quantity: data.quantity,
+                        type: data.type,
+                        warehouseOrigin: {
+                            connect: { id: rawMaterial.warehouseId },
+                        },
+                        warehouseDestination: {
+                            connect: {
+                                id,
+                            },
+                        },
+                        rawMaterial: {
+                            connect: {
+                                id: data.rawMaterialId,
+                            },
+                        },
                     },
-                },
-            },
+                });
+            } else if (data.mixMachineId) {
+                const { id } = await tx.mixtureMachine.findUniqueOrThrow({
+                    where: { id: data.mixMachineId },
+                });
+
+                mov = await tx.warehouseMovement.create({
+                    data: {
+                        user: {
+                            connect: { id: data.userId },
+                        },
+                        quantity: data.quantity,
+                        type: data.type,
+                        warehouseOrigin: {
+                            connect: { id: rawMaterial.warehouseId },
+                        },
+                        mixtureMachine: {
+                            connect: {
+                                id,
+                            },
+                        },
+                        rawMaterial: {
+                            connect: {
+                                id: data.rawMaterialId,
+                            },
+                        },
+                    },
+                });
+            } else {
+                const { id } = await tx.manufactureMachine.findUniqueOrThrow({
+                    where: { id: data.manufactureMachineId },
+                });
+
+                mov = await tx.warehouseMovement.create({
+                    data: {
+                        user: {
+                            connect: { id: data.userId },
+                        },
+                        quantity: data.quantity,
+                        type: data.type,
+                        warehouseOrigin: {
+                            connect: { id: rawMaterial.warehouseId },
+                        },
+                        manufactureMachine: {
+                            connect: {
+                                id,
+                            },
+                        },
+                        rawMaterial: {
+                            connect: {
+                                id: data.rawMaterialId,
+                            },
+                        },
+                    },
+                });
+            }
+
+            // TODO: Check this type
+            if (data.type === 'MIXTURE_TO_MACHINE') {
+                await tx.rawMaterial.update({
+                    data: {
+                        ...rawMaterial,
+                        stock: rawMaterial.stock - data.quantity,
+                    },
+                    where: {
+                        id: rawMaterial.id,
+                    },
+                });
+            }
+
+            return mov;
         });
     }
 
     async findOne(where: Prisma.WarehouseMovementWhereUniqueInput) {
         return this.prisma.warehouseMovement.findUniqueOrThrow({ where });
+    }
+
+    async findByType({ type }: { type: WarehouseType }) {
+        return this.prisma.warehouseMovement.findMany({
+            where: { type },
+        });
     }
 
     async findAll(

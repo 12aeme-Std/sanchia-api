@@ -1,5 +1,7 @@
+import validateSchema from '@middlewares/validation.mid';
 import { WarehouseMovementService } from './warehouse-movement.service';
 import { Request, Response } from 'express';
+import { CreateWarehouseMovementSchema } from './warehouse-movement.validator';
 
 export class WarehouseMovementController {
     private readonly warehouseMovementService: WarehouseMovementService;
@@ -9,6 +11,8 @@ export class WarehouseMovementController {
     }
 
     async create(req: Request, res: Response) {
+        validateSchema(req.body, CreateWarehouseMovementSchema);
+
         return res.status(200).json(
             await this.warehouseMovementService.create({
                 ...req.body,
@@ -23,6 +27,13 @@ export class WarehouseMovementController {
                 id: Number(req.params.id),
             })
         );
+    }
+
+    async findByType(req: Request, res: Response) {
+        const movements = await this.warehouseMovementService.findByType(
+            req.body
+        );
+        return res.status(200).json(movements);
     }
 
     async findAll(req: Request, res: Response) {
