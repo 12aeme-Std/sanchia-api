@@ -5,7 +5,7 @@ import { CreateManufactureResultDto } from './dtos/create-result.dto';
 export const createManufactureSchema = Joi.object<CreateManufactureDto>({
     name: Joi.string().required(),
     manufactureMachineId: Joi.number().required(),
-    resources: Joi.object({
+    resources: Joi.array().items({
         mixtureResultId: Joi.number().optional(),
         rawMaterialId: Joi.number().optional(),
         quantity: Joi.number().required(),

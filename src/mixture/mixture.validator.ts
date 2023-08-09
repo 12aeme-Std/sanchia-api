@@ -8,7 +8,7 @@ export const CreateMixtureSchema = Joi.object<CreateMixtureDto>({
     mixtureMachineId: Joi.number().required(),
     recipeId: Joi.number().required(),
 
-    materials: Joi.object({
+    materials: Joi.array().items({
         rawMaterialId: Joi.number().required(),
         quantity: Joi.number().required(),
     }),
@@ -20,7 +20,7 @@ export const UpdateMixtureSchema = Joi.object<CreateMixtureDto>({
     mixtureMachineId: Joi.number().optional(),
     recipeId: Joi.number().optional(),
 
-    materials: Joi.object({
+    materials: Joi.array().items({
         rawMaterialId: Joi.number().optional(),
         quantity: Joi.number().optional(),
     }),
