@@ -28,13 +28,31 @@ export class UserService {
                 ...data,
                 password: hashedPwd,
             },
+            select: {
+                id: true,
+                name: true,
+                lastname: true,
+                email: true,
+                role: true,
+            },
         });
     }
 
     async findOne(where: Prisma.UserWhereUniqueInput): Promise<UserDto | null> {
-        return this.prisma.user.findUniqueOrThrow({ where }).catch(() => {
-            throw new HttpError(404, 'User not found');
-        });
+        return this.prisma.user
+            .findUniqueOrThrow({
+                where,
+                select: {
+                    id: true,
+                    name: true,
+                    lastname: true,
+                    email: true,
+                    role: true,
+                },
+            })
+            .catch(() => {
+                throw new HttpError(404, 'User not found');
+            });
     }
 
     async findAll(
@@ -47,7 +65,7 @@ export class UserService {
         const { page, limit, cursor, where, orderBy } = params;
 
         return this.prisma.user.findMany({
-            skip: page! - 1,
+            skip: limit! * (page! - 1),
             take: limit,
             cursor,
             where,
