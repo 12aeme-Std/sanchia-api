@@ -58,7 +58,7 @@ export class ProductService {
         // TODO: Include all the category and not just the id
 
         return this.prisma.product.findMany({
-            skip: page! - 1,
+            skip: limit! * (page! - 1),
             take: limit,
             cursor,
             where,

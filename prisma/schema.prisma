@@ -384,11 +384,20 @@ model ResourcesOnManufacture {
 model ManufactureResult {
   id Int @id @default(autoincrement())
 
-  manufacture   Manufacture @relation(fields: [manufactureId], references: [id])
-  manufactureId Int         @map("manufacture_id")
+  waste String @default("DESPERDICIO")
+  wasteQuantity Int @default(0)
+
+  productResultName String
+  productResultQuantity Int
+
+  burr String @default("REBABA")
+  burrQuantity Int @default(0)
 
   quantity   Int
   finishedAt DateTime @default(now()) @map("finished_at")
+
+  manufacture   Manufacture @relation(fields: [manufactureId], references: [id])
+  manufactureId Int         @map("manufacture_id")
 
   @@map("manufacture_result")
 }

@@ -40,7 +40,7 @@ export class WarehouseService {
         const { page, limit, cursor, where, orderBy } = params;
 
         return this.prisma.warehouse.findMany({
-            skip: page! - 1,
+            skip: limit! * (page! - 1),
             take: limit,
             where,
             orderBy,
