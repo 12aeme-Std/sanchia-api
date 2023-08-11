@@ -30,8 +30,8 @@ export class MixtureController {
 
     async findAll(req: Request, res: Response) {
         const mixtures = await this.mixtureService.findAll({
-            page: Number(req.params.page ?? 1),
-            limit: Number(req.params.limit ?? 15),
+            page: Number(req.query.page ?? 1),
+            limit: Number(req.query.limit ?? 15),
         });
 
         return res.status(200).json(mixtures);

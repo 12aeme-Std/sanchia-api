@@ -103,7 +103,7 @@ export class MixtureService {
         const { page, limit, cursor, where, orderBy } = params;
 
         return this.prisma.mixture.findMany({
-            skip: page! - 1,
+            skip: limit! * (page! - 1),
             take: limit,
             cursor,
             where,

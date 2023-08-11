@@ -13,9 +13,13 @@ export class ManufactureService {
 
     async create(data: CreateManufactureDto) {
         return this.prisma.$transaction(async (tx) => {
-            const machine = await tx.manufactureMachine.findUniqueOrThrow({
-                where: { id: data.manufactureMachineId },
-            });
+            const machine = await tx.manufactureMachine
+                .findUniqueOrThrow({
+                    where: { id: data.manufactureMachineId },
+                })
+                .catch(() => {
+                    throw new HttpError(404, 'Machine does not exists');
+                });
 
             const manufactureExists = await tx.manufacture.findUnique({
                 where: { name: data.name },
@@ -41,13 +45,18 @@ export class ManufactureService {
             await Promise.all(
                 data.resources.map(async (materialOnManufacture) => {
                     if (materialOnManufacture.rawMaterialId) {
-                        const material = await tx.rawMaterial.findUniqueOrThrow(
-                            {
+                        const material = await tx.rawMaterial
+                            .findUniqueOrThrow({
                                 where: {
                                     id: materialOnManufacture.rawMaterialId,
                                 },
-                            }
-                        );
+                            })
+                            .catch(() => {
+                                throw new HttpError(
+                                    404,
+                                    'Raw material does not exists'
+                                );
+                            });
 
                         return tx.resourcesOnManufacture.create({
                             data: {
@@ -66,11 +75,17 @@ export class ManufactureService {
                             },
                         });
                     } else if (materialOnManufacture.mixtureResultId) {
-                        const mixtureResult =
-                            await tx.mixtureResult.findUniqueOrThrow({
+                        const mixtureResult = await tx.mixtureResult
+                            .findUniqueOrThrow({
                                 where: {
                                     id: materialOnManufacture.rawMaterialId,
                                 },
+                            })
+                            .catch(() => {
+                                throw new HttpError(
+                                    404,
+                                    'Mixture result does not exists'
+                                );
                             });
 
                         return tx.resourcesOnManufacture.create({
@@ -104,7 +119,7 @@ export class ManufactureService {
 
     async findOne(where: Prisma.ManufactureWhereUniqueInput) {
         return this.prisma.manufacture
-            .findUniqueOrThrow({ where })
+            .findUniqueOrThrow({ where, include: { results: true } })
             .catch(() => {
                 throw new HttpError(404, 'Manufacture does not exists');
             });
@@ -120,11 +135,12 @@ export class ManufactureService {
         const { page, limit, cursor, where, orderBy } = params;
 
         return this.prisma.manufacture.findMany({
-            skip: page! - 1,
+            skip: limit! * (page! - 1),
             take: limit,
             cursor,
             where,
             orderBy,
+            include: { results: true },
         });
     }
 
@@ -138,6 +154,12 @@ export class ManufactureService {
                 },
                 finishedAt: data.finishedAt,
                 quantity: data.quantity,
+                waste: data.waste,
+                wasteQuantity: data.wasteQuantity,
+                productResultName: data.productResultName,
+                productResultQuantity: data.productResultQuantity,
+                burr: data.burr,
+                burrQuantity: data.burrQuantity,
             },
         });
     }

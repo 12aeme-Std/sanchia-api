@@ -40,7 +40,7 @@ export class CategoryService {
         const { page, limit, cursor, where, orderBy } = params;
 
         return this.prisma.category.findMany({
-            skip: page! - 1,
+            skip: limit! * (page! - 1),
             take: limit,
             cursor,
             orderBy,

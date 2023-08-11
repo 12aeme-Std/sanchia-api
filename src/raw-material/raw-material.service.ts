@@ -50,7 +50,7 @@ export class RawMaterialService {
         const { page, limit, cursor, where, orderBy } = params;
 
         return this.prisma.rawMaterial.findMany({
-            skip: page! - 1,
+            skip: limit! * (page! - 1),
             take: limit,
             where,
             orderBy,
