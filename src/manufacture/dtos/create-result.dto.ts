@@ -8,4 +8,5 @@ export interface CreateManufactureResultDto {
     productResultQuantity: number;
     burr?: string;
     burrQuantity?: number;
+    warehouseId?: number;
 }

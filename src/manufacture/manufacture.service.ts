@@ -115,24 +115,9 @@ export class ManufactureService {
         });
     }
 
-    
     async createResult(data: CreateManufactureResultDto) {
         return this.prisma.manufactureResult.create({
-            data: {
-                manufacture: {
-                    connect: {
-                        id: data.manufactureId,
-                    },
-                },
-                finishedAt: data.finishedAt,
-                quantity: data.quantity,
-                waste: data.waste,
-                wasteQuantity: data.wasteQuantity,
-                productResultName: data.productResultName,
-                productResultQuantity: data.productResultQuantity,
-                burr: data.burr,
-                burrQuantity: data.burrQuantity,
-            },
+            data,
         });
     }
 }
