@@ -2,7 +2,7 @@ import {
     Prisma,
     PrismaClient,
     WarehouseMovement,
-    WarehouseType,
+    WarehouseMovementType,
 } from '@prisma/client';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { CreateMovementDto } from './dtos/create-movement.dto';
@@ -139,7 +139,7 @@ export class WarehouseMovementService {
         return this.prisma.warehouseMovement.findUniqueOrThrow({ where });
     }
 
-    async findByType({ type }: { type: WarehouseType }) {
+    async findByType({ type }: { type: WarehouseMovementType }) {
         return this.prisma.warehouseMovement.findMany({
             where: { type },
         });

@@ -4,7 +4,6 @@ export interface CreateManufactureDto {
 
     resources: Array<{
         mixtureResultId?: number;
-        rawMaterialId?: number;
         quantity: number;
     }>;
 }

@@ -209,20 +209,20 @@ model WarehouseMovement {
   user   User @relation(fields: [userId], references: [id])
   userId Int  @map("user_id")
 
-  registeredAt DateTime      @default(now()) @map("registered_at")
-  type         WarehouseType
+  registeredAt DateTime              @default(now()) @map("registered_at")
+  type         WarehouseMovementType
 
   warehouseOrigin   Warehouse @relation(fields: [warehouseOriginId], references: [id], name: "origin")
   warehouseOriginId Int       @map("warehouse_origin_id")
 
   warehouseDestination   Warehouse? @relation(fields: [warehouseDestinationId], references: [id], name: "destination")
-  warehouseDestinationId Int?        @map("warehouse_destination_id")
+  warehouseDestinationId Int?       @map("warehouse_destination_id")
 
   mixtureMachine   MixtureMachine? @relation(fields: [mixtureMachineId], references: [id])
-  mixtureMachineId Int?             @map("mixture_machine_id")
+  mixtureMachineId Int?            @map("mixture_machine_id")
 
   manufactureMachine   ManufactureMachine? @relation(fields: [manufactureMachineId], references: [id])
-  manufactureMachineId Int?                 @map("manufacture_machine_id")
+  manufactureMachineId Int?                @map("manufacture_machine_id")
 
   quantity Int
 
@@ -267,8 +267,8 @@ model Mixture {
   recipe   Recipe @relation(fields: [recipeId], references: [id])
   recipeId Int    @map("recipe_id")
 
-  materials    RawMaterialOnMixture[]
-  results      MixtureResult[]
+  materials RawMaterialOnMixture[]
+  results   MixtureResult[]
 
   @@map("mixture")
 }
@@ -297,6 +297,8 @@ model MixtureResult {
 
   manufactures ResourcesOnManufacture[]
 
+  ResourceOnRecipe ResourceOnRecipe[]
+
   @@map("mixture_result")
 }
 
@@ -309,23 +311,33 @@ model Recipe {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  mixtures  Mixture[]
-  materials RawMaterialOnRecipe[]
+  mixtures Mixture[]
+
+  resources ResourceOnRecipe[]
+
+  parentId Int?
+  parent   Recipe? @relation("RecipeVariants", fields: [parentId], references: [id])
+
+  variants Recipe[] @relation("RecipeVariants")
+
+  type RecipeType @default(FINAL_PRODUCT)
 
   @@map("recipe")
 }
 
-model RawMaterialOnRecipe {
-  recipe   Recipe @relation(fields: [recipeId], references: [id])
-  recipeId Int    @map("recipe_id")
+model ResourceOnRecipe {
+  id Int @id @default(autoincrement())
 
-  rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
-  rawMaterialId Int         @map("raw_material_id")
+  rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id])
+  rawMaterialId Int          @map("raw_material_id")
 
-  quantity Int
+  mixtureResult   MixtureResult? @relation(fields: [mixtureResultId], references: [id])
+  mixtureResultId Int            @map("mixture_result_id")
 
-  @@id([recipeId, rawMaterialId])
-  @@map("recipe_material")
+  recipe   Recipe? @relation(fields: [recipeId], references: [id])
+  recipeId Int?    @map("recipe_id")
+
+  @@map("recipe_resources")
 }
 
 model RawMaterial {
@@ -340,10 +352,9 @@ model RawMaterial {
   warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
   warehouseId Int       @map("warehouse_id")
 
-  recipes             RawMaterialOnRecipe[]
   materialsOnMixtures RawMaterialOnMixture[]
-  manufactures        ResourcesOnManufacture[]
   movements           WarehouseMovement[]
+  ResourceOnRecipe    ResourceOnRecipe[]
 
   @@map("raw_material")
 }
@@ -371,10 +382,7 @@ model ResourcesOnManufacture {
   manufactureId Int         @map("manufacture_id")
 
   mixtureResult   MixtureResult? @relation(fields: [mixtureResultId], references: [id])
-  mixtureResultId Int?      @map("mixture_id")
-
-  rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id])
-  rawMaterialId Int?          @map("raw_material_id")
+  mixtureResultId Int?           @map("mixture_id")
 
   quantity Int
 
@@ -384,14 +392,14 @@ model ResourcesOnManufacture {
 model ManufactureResult {
   id Int @id @default(autoincrement())
 
-  waste String @default("DESPERDICIO")
-  wasteQuantity Int @default(0)
+  waste         String @default("DESPERDICIO")
+  wasteQuantity Int    @default(0)
 
-  productResultName String
+  productResultName     String
   productResultQuantity Int
 
-  burr String @default("REBABA")
-  burrQuantity Int @default(0)
+  burr         String @default("REBABA")
+  burrQuantity Int    @default(0)
 
   quantity   Int
   finishedAt DateTime @default(now()) @map("finished_at")
@@ -426,7 +434,7 @@ enum ApplyTo {
   @@map("apply_to")
 }
 
-enum WarehouseType {
+enum WarehouseMovementType {
   WAREHOUSE_TO_MACHINE
   MIXTURE_TO_MACHINE
 
@@ -442,9 +450,17 @@ enum RawMaterialType {
 
 enum ManufactureStatus {
   PRODUCT
-  PRODUCTION
+  SEMI_PRODUCT
   REFUSE
   REJECTED
 
   @@map("manufacture_status")
+}
+
+enum RecipeType {
+  FINAL_PRODUCT
+  ASSEMBLY_PRODUCT
+  MIXTURE
+
+  @@map("recipe_type")
 }
