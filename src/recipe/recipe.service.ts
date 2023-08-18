@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient, RecipeType } from '@prisma/client';
 import { RecipeDto } from './dtos/recipe.dto';
 import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
@@ -204,6 +204,34 @@ export class RecipeService {
             .catch(() => {
                 throw new HttpError(404, 'Recipe not found');
             });
+
+        return recipe;
+    }
+
+    async findByType(
+        params: IPagination & {
+            cursor?: Prisma.RecipeWhereUniqueInput;
+            orderBy?: Prisma.RecipeOrderByWithAggregationInput;
+            type: RecipeType;
+        }
+    ): Promise<RecipeDto[]> {
+        const { page, limit, cursor, orderBy, type } = params;
+
+        const recipe = await this.prisma.recipe.findMany({
+            take: limit,
+            skip: limit! * (page! - 1),
+            orderBy,
+            cursor,
+            where: {
+                type,
+            },
+            include: {
+                mixtures: true,
+                resources: true,
+                parent: true,
+                variants: true,
+            },
+        });
 
         return recipe;
     }

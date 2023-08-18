@@ -94,7 +94,7 @@ export class WarehouseMovementService {
                         },
                     });
                     console.log(mov);
-                    
+
                     return mov;
                 }
             }
@@ -264,22 +264,6 @@ export class WarehouseMovementService {
                     return mov;
                 }
             }
-
-            // TODO: Check this type
-            // if (data.type === 'WAREHOUSE_TO_MIXTURE_MACHINE') {
-            //     await tx.rawMaterial.update({
-            //         data: {
-            //             ...rawMaterial,
-            //             stock: rawMaterial.stock - data.quantity,
-            //         },
-            //         where: {
-            //             id: rawMaterial.id,
-            //         },
-            //     });
-            // }
-
-            // TODO: Return current mov
-            return tx.warehouseMovement.findMany();
         });
     }
 

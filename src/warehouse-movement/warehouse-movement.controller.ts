@@ -14,7 +14,6 @@ export class WarehouseMovementController {
         validateSchema(req.body, CreateWarehouseMovementSchema);
 
         console.log(req.body);
-        
 
         return res.status(200).json(
             await this.warehouseMovementService.create({

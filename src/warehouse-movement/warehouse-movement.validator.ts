@@ -1,8 +1,11 @@
+import { WarehouseMovementType } from '@prisma/client';
 import Joi from 'joi';
 
 export const CreateWarehouseMovementSchema = Joi.object({
-    type: Joi.string().required(),
     quantity: Joi.number().required(),
+    type: Joi.string()
+        .valid(...Object.values(WarehouseMovementType))
+        .required(),
 
     warehouseOriginId: Joi.number().optional(),
 

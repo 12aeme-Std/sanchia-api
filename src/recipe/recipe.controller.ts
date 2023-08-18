@@ -2,6 +2,7 @@ import validateSchema from '@middlewares/validation.mid';
 import { RecipeService } from './recipe.service';
 import { Request, Response } from 'express';
 import { CreateRecipeSchema, UpdateRecipeSchema } from './recipe.validator';
+import { RecipeType } from '@prisma/client';
 
 export class RecipeController {
     private readonly recipeService: RecipeService;
@@ -33,6 +34,16 @@ export class RecipeController {
             .json(
                 await this.recipeService.findOne({ id: Number(req.params.id) })
             );
+    }
+
+    async findByType(req: Request, res: Response) {
+        return res.status(200).json(
+            await this.recipeService.findByType({
+                page: Number(req.query.page ?? 1),
+                limit: Number(req.query.limit ?? 15),
+                type: req.query.type as RecipeType,
+            })
+        );
     }
 
     async findAll(req: Request, res: Response) {
