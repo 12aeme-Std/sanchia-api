@@ -1,9 +1,9 @@
-import { WarehouseType } from '@prisma/client';
+import { WarehouseMovementType } from '@prisma/client';
 
 export interface CreateMovementDto {
     userId: number;
     registeredAt?: Date | string;
-    type: WarehouseType;
+    type: WarehouseMovementType;
     quantity: number;
 
     warehouseOriginId: number;
@@ -12,5 +12,7 @@ export interface CreateMovementDto {
     mixMachineId?: number;
     manufactureMachineId?: number;
 
-    rawMaterialId: number;
+    rawMaterialId?: number;
+    manufactureResultId: number;
+    mixtureResultId: number;
 }

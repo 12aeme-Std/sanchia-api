@@ -2,6 +2,7 @@ import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { WarehouseDto } from './dtos/warehouse.dto';
+import { CreateWarehouseDto } from './dtos/create-warehouse.dto';
 
 export class WarehouseService {
     private readonly prisma: PrismaClient;
@@ -10,7 +11,7 @@ export class WarehouseService {
         this.prisma = new PrismaClient();
     }
 
-    async create(data: Prisma.WarehouseCreateInput): Promise<WarehouseDto> {
+    async create(data: CreateWarehouseDto): Promise<WarehouseDto> {
         if (await this.exists({ name: data.name })) {
             throw new HttpError(409, 'Warehouse already exists');
         }

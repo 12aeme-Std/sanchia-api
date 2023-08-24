@@ -2,7 +2,11 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { CreateManufactureDto } from './dtos/create-manufacture.dto';
-import { CreateManufactureResultDto } from './dtos/create-result.dto';
+import {
+    CreateManufactureProductDto,
+    CreateManufactureResultDto,
+    FinishManufactureProcessDto,
+} from './dtos/create-result.dto';
 
 export class ManufactureService {
     private readonly prisma: PrismaClient;
@@ -44,67 +48,35 @@ export class ManufactureService {
 
             await Promise.all(
                 data.resources.map(async (materialOnManufacture) => {
-                    if (materialOnManufacture.rawMaterialId) {
-                        const material = await tx.rawMaterial
-                            .findUniqueOrThrow({
-                                where: {
-                                    id: materialOnManufacture.rawMaterialId,
-                                },
-                            })
-                            .catch(() => {
-                                throw new HttpError(
-                                    404,
-                                    'Raw material does not exists'
-                                );
-                            });
-
-                        return tx.resourcesOnManufacture.create({
-                            data: {
-                                manufacture: {
-                                    connect: {
-                                        id: manufacture.id,
-                                    },
-                                },
-                                rawMaterial: {
-                                    connect: {
-                                        id: material.id,
-                                    },
-                                },
-
-                                quantity: materialOnManufacture.quantity,
+                    const mixtureResult = await tx.mixtureResult
+                        .findUniqueOrThrow({
+                            where: {
+                                id: materialOnManufacture.mixtureResultId,
                             },
+                        })
+                        .catch(() => {
+                            throw new HttpError(
+                                404,
+                                'Mixture result does not exists'
+                            );
                         });
-                    } else if (materialOnManufacture.mixtureResultId) {
-                        const mixtureResult = await tx.mixtureResult
-                            .findUniqueOrThrow({
-                                where: {
-                                    id: materialOnManufacture.rawMaterialId,
-                                },
-                            })
-                            .catch(() => {
-                                throw new HttpError(
-                                    404,
-                                    'Mixture result does not exists'
-                                );
-                            });
 
-                        return tx.resourcesOnManufacture.create({
-                            data: {
-                                manufacture: {
-                                    connect: {
-                                        id: manufacture.id,
-                                    },
+                    return tx.resourcesOnManufacture.create({
+                        data: {
+                            manufacture: {
+                                connect: {
+                                    id: manufacture.id,
                                 },
-                                mixtureResult: {
-                                    connect: {
-                                        id: mixtureResult.id,
-                                    },
-                                },
-
-                                quantity: materialOnManufacture.quantity,
                             },
-                        });
-                    }
+                            mixtureResult: {
+                                connect: {
+                                    id: mixtureResult.id,
+                                },
+                            },
+
+                            quantity: materialOnManufacture.quantity,
+                        },
+                    });
                 })
             );
 
@@ -119,7 +91,10 @@ export class ManufactureService {
 
     async findOne(where: Prisma.ManufactureWhereUniqueInput) {
         return this.prisma.manufacture
-            .findUniqueOrThrow({ where, include: { results: true } })
+            .findUniqueOrThrow({
+                where,
+                include: { results: true, resources: true },
+            })
             .catch(() => {
                 throw new HttpError(404, 'Manufacture does not exists');
             });
@@ -140,26 +115,47 @@ export class ManufactureService {
             cursor,
             where,
             orderBy,
-            include: { results: true },
+            include: { results: true, resources: true },
         });
     }
 
-    async createResult(data: CreateManufactureResultDto) {
+    async finishManufactureProcess(data: FinishManufactureProcessDto) {
+        const result = await this.createResult(data.result, data.manufactureId);
+        const product = await this.createProduct(
+            data.product,
+            data.manufactureId
+        );
+
+        return {
+            result,
+            product,
+        };
+    }
+
+    private async createResult(
+        data: CreateManufactureResultDto,
+        manufactureId: number
+    ) {
+        await this.findOne({ id: manufactureId });
+
         return this.prisma.manufactureResult.create({
             data: {
-                manufacture: {
-                    connect: {
-                        id: data.manufactureId,
-                    },
-                },
-                finishedAt: data.finishedAt,
-                quantity: data.quantity,
-                waste: data.waste,
-                wasteQuantity: data.wasteQuantity,
-                productResultName: data.productResultName,
-                productResultQuantity: data.productResultQuantity,
-                burr: data.burr,
-                burrQuantity: data.burrQuantity,
+                ...data,
+                manufactureId,
+            },
+        });
+    }
+
+    private async createProduct(
+        data: CreateManufactureProductDto,
+        manufactureId: number
+    ) {
+        await this.findOne({ id: manufactureId });
+
+        return this.prisma.manufactureProduct.create({
+            data: {
+                ...data,
+                manufactureId,
             },
         });
     }

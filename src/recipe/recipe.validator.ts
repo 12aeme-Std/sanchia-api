@@ -3,6 +3,7 @@ import Joi from 'joi';
 export const CreateRecipeSchema = Joi.object({
     name: Joi.string().required(),
     description: Joi.string().required(),
+    type: Joi.string().required(),
     quantity: Joi.number().required(),
     materials: Joi.array().items({
         id: Joi.number().required(),
