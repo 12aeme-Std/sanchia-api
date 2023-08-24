@@ -13,15 +13,15 @@ export const createManufactureSchema = Joi.object<CreateManufactureDto>({
     }),
 });
 
-export const createResultSchema = Joi.object<CreateManufactureResultDto>({
-    manufactureId: Joi.number().required(),
-    quantity: Joi.number().required(),
-    warehouseId: Joi.number().optional(),
-    finishedAt: Joi.date().required(),
-    waste: Joi.string().optional(),
-    wasteQuantity: Joi.number().optional(),
-    productResultName: Joi.string().required(),
-    productResultQuantity: Joi.number().required(),
-    burr: Joi.string().optional(),
-    burrQuantity: Joi.number().optional(),
-});
+// export const createResultSchema = Joi.object<CreateManufactureResultDto>({
+//     manufactureId: Joi.number().required(),
+//     quantity: Joi.number().required(),
+//     warehouseId: Joi.number().optional(),
+//     finishedAt: Joi.date().required(),
+//     waste: Joi.string().optional(),
+//     wasteQuantity: Joi.number().optional(),
+//     productResultName: Joi.string().required(),
+//     productResultQuantity: Joi.number().required(),
+//     burr: Joi.string().optional(),
+//     burrQuantity: Joi.number().optional(),
+// });

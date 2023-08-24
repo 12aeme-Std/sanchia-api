@@ -2,7 +2,11 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { CreateManufactureDto } from './dtos/create-manufacture.dto';
-import { CreateManufactureResultDto } from './dtos/create-result.dto';
+import {
+    CreateManufactureProductDto,
+    CreateManufactureResultDto,
+    FinishManufactureProcessDto,
+} from './dtos/create-result.dto';
 
 export class ManufactureService {
     private readonly prisma: PrismaClient;
@@ -115,9 +119,44 @@ export class ManufactureService {
         });
     }
 
-    async createResult(data: CreateManufactureResultDto) {
+    async finishManufactureProcess(data: FinishManufactureProcessDto) {
+        const result = await this.createResult(data.result, data.manufactureId);
+        const product = await this.createProduct(
+            data.product,
+            data.manufactureId
+        );
+
+        return {
+            result,
+            product,
+        };
+    }
+
+    private async createResult(
+        data: CreateManufactureResultDto,
+        manufactureId: number
+    ) {
+        await this.findOne({ id: manufactureId });
+
         return this.prisma.manufactureResult.create({
-            data,
+            data: {
+                ...data,
+                manufactureId,
+            },
+        });
+    }
+
+    private async createProduct(
+        data: CreateManufactureProductDto,
+        manufactureId: number
+    ) {
+        await this.findOne({ id: manufactureId });
+
+        return this.prisma.manufactureProduct.create({
+            data: {
+                ...data,
+                manufactureId,
+            },
         });
     }
 }
