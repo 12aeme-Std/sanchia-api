@@ -2,8 +2,7 @@ import validateSchema from '@middlewares/validation.mid';
 import { ManufactureService } from './manufacture.service';
 import { Request, Response } from 'express';
 import {
-    createManufactureSchema,
-    createResultSchema,
+    createManufactureSchema
 } from './manufacture.validator';
 
 export class ManufactureController {
@@ -38,11 +37,13 @@ export class ManufactureController {
         return res.status(200).json(manufactures);
     }
 
-    async createResult(req: Request, res: Response) {
-        validateSchema(req.body, createResultSchema);
+    async finishManufactureProcess(req: Request, res: Response) {
+        // validateSchema(req.body, createResultSchema);
 
         return res
             .status(200)
-            .json(await this.manufactureService.createResult(req.body));
+            .json(
+                await this.manufactureService.finishManufactureProcess(req.body)
+            );
     }
 }

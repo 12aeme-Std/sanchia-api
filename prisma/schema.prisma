@@ -190,18 +190,18 @@ model PromosOrders {
 }
 
 model Warehouse {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  description String   @db.Text
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  description String       @db.Text
   type        WarehoseType @default(RAW_MATERIAL)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt() @map("updated_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt() @map("updated_at")
 
   rawMaterials                  RawMaterial[]
   mixturesResults               MixtureResult[]
-  manufactureResults            ManufactureResult[]
   warehouseMovementOrigins      WarehouseMovement[] @relation("origin")
   warehouseMovementDestinations WarehouseMovement[] @relation("destination")
+  manufactureResult             ManufactureResult[]
 
   @@map("warehouse")
 }
@@ -216,7 +216,7 @@ model WarehouseMovement {
   type         WarehouseMovementType @default(WAREHOUSE_TO_WAREHOUSE)
 
   warehouseOrigin   Warehouse? @relation(fields: [warehouseOriginId], references: [id], name: "origin")
-  warehouseOriginId Int?        @map("warehouse_origin_id")
+  warehouseOriginId Int?       @map("warehouse_origin_id")
 
   warehouseDestination   Warehouse? @relation(fields: [warehouseDestinationId], references: [id], name: "destination")
   warehouseDestinationId Int?       @map("warehouse_destination_id")
@@ -236,10 +236,10 @@ model WarehouseMovement {
   quantity Int
 
   mixture   Mixture? @relation(fields: [mixtureId], references: [id])
-  mixtureId Int?      @map("mixture_id")
+  mixtureId Int?     @map("mixture_id")
 
   rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id])
-  rawMaterialId Int?          @map("raw_material_id")
+  rawMaterialId Int?         @map("raw_material_id")
 
   @@map("warehouse_movement")
 }
@@ -281,7 +281,7 @@ model Mixture {
 
   materials         RawMaterialOnMixture[]
   results           MixtureResult[]
-  WarehouseMovement WarehouseMovement[]
+  warehouseMovement WarehouseMovement[]
 
   @@map("mixture")
 }
@@ -338,6 +338,8 @@ model Recipe {
 
   type RecipeType @default(FINAL_PRODUCT)
 
+  manufactureProducts ManufactureProduct[]
+
   @@map("recipe")
 }
 
@@ -345,10 +347,10 @@ model ResourceOnRecipe {
   id Int @id @default(autoincrement())
 
   rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id])
-  rawMaterialId Int?          @map("raw_material_id")
+  rawMaterialId Int?         @map("raw_material_id")
 
   mixtureResult   MixtureResult? @relation(fields: [mixtureResultId], references: [id])
-  mixtureResultId Int?            @map("mixture_result_id")
+  mixtureResultId Int?           @map("mixture_result_id")
 
   recipe   Recipe? @relation(fields: [recipeId], references: [id])
   recipeId Int?    @map("recipe_id")
@@ -357,9 +359,9 @@ model ResourceOnRecipe {
 }
 
 model RawMaterial {
-  id    Int             @id @default(autoincrement())
-  name  String          @unique
-  stock Int             @default(0)
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  stock Int    @default(0)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt() @map("updated_at")
@@ -367,9 +369,10 @@ model RawMaterial {
   warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
   warehouseId Int       @map("warehouse_id")
 
-  materialsOnMixtures RawMaterialOnMixture[]
-  movements           WarehouseMovement[]
-  ResourceOnRecipe    ResourceOnRecipe[]
+  materialsOnMixtures    RawMaterialOnMixture[]
+  movements              WarehouseMovement[]
+  ResourceOnRecipe       ResourceOnRecipe[]
+  ResourcesOnManufacture ResourcesOnManufacture[]
 
   @@map("raw_material")
 }
@@ -384,8 +387,9 @@ model Manufacture {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt() @map("updated_at")
 
-  resources ResourcesOnManufacture[]
-  results   ManufactureResult[]
+  resources           ResourcesOnManufacture[]
+  results             ManufactureResult[]
+  manufactureProducts ManufactureProduct[]
 
   @@map("manufacture")
 }
@@ -399,6 +403,9 @@ model ResourcesOnManufacture {
   mixtureResult   MixtureResult? @relation(fields: [mixtureResultId], references: [id])
   mixtureResultId Int?           @map("mixture_id")
 
+  rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id])
+  rawMaterialId Int?         @map("raw_material_id")
+
   quantity Int
 
   @@map("manufacture_resources")
@@ -407,25 +414,33 @@ model ResourcesOnManufacture {
 model ManufactureResult {
   id Int @id @default(autoincrement())
 
-  waste         String @default("DESPERDICIO")
-  wasteQuantity Int    @default(0)
+  waste Int
+  burr  Int
 
-  productResultName     String
-  productResultQuantity Int
-
-  burr         String @default("REBABA")
-  burrQuantity Int    @default(0)
-
-  quantity   Int
   finishedAt DateTime @default(now()) @map("finished_at")
 
   manufacture       Manufacture         @relation(fields: [manufactureId], references: [id])
   manufactureId     Int                 @map("manufacture_id")
   WarehouseMovement WarehouseMovement[]
-  Warehouse         Warehouse?          @relation(fields: [warehouseId], references: [id])
-  warehouseId       Int?
+
+  Warehouse   Warehouse? @relation(fields: [warehouseId], references: [id])
+  warehouseId Int?       @map("warehouse_id")
 
   @@map("manufacture_result")
+}
+
+model ManufactureProduct {
+  id   Int                    @id @default(autoincrement())
+  name String
+  type ManufactureProductType @default(PRODUCT)
+
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+  recipeId Int    @map("recipe_id")
+
+  manufacture   Manufacture @relation(fields: [manufactureId], references: [id])
+  manufactureId Int         @map("manufacture_id ")
+
+  @@map("product_result")
 }
 
 enum Roles {
@@ -486,4 +501,9 @@ enum RecipeType {
   MIXTURE
 
   @@map("recipe_types")
+}
+
+enum ManufactureProductType {
+  SEMI_PRODUCT
+  PRODUCT
 }
