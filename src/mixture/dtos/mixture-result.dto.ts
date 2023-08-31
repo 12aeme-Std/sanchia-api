@@ -1,4 +1,4 @@
-import { MixtureDto } from "./mixture.dtos";
+import { MixtureDto } from './mixture.dtos';
 
 export interface MixtureResultDto {
     id: number;

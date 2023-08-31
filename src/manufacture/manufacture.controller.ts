@@ -1,9 +1,7 @@
 import validateSchema from '@middlewares/validation.mid';
 import { ManufactureService } from './manufacture.service';
 import { Request, Response } from 'express';
-import {
-    createManufactureSchema
-} from './manufacture.validator';
+import { createManufactureSchema } from './manufacture.validator';
 
 export class ManufactureController {
     private readonly manufactureService: ManufactureService;
