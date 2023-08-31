@@ -37,6 +37,15 @@ export class MixtureController {
         return res.status(200).json(mixtures);
     }
 
+    async findAllResults(req: Request, res: Response) {
+        const mixtures = await this.mixtureService.findAllResults({
+            page: Number(req.query.page ?? 1),
+            limit: Number(req.query.limit ?? 15),
+        });
+
+        return res.status(200).json(mixtures);
+    }
+
     async update(req: Request, res: Response) {
         validateSchema(req.body, UpdateMixtureSchema);
         return res
