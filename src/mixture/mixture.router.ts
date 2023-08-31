@@ -10,6 +10,10 @@ router.use(passport.authenticate('jwt', { session: false }));
 router.post('/result', mixtureController.createResult.bind(mixtureController));
 router.post('/', mixtureController.create.bind(mixtureController));
 
+router.get(
+    '/results',
+    mixtureController.findAllResults.bind(mixtureController)
+);
 router.get('/:id', mixtureController.findOne.bind(mixtureController));
 router.get('/', mixtureController.findAll.bind(mixtureController));
 
