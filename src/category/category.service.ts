@@ -29,7 +29,6 @@ export class CategoryService {
         });
     }
 
-    // TODO: Do we have to include products related with each category?
     async findAll(
         params: IPagination & {
             cursor?: Prisma.CategoryWhereUniqueInput;
@@ -52,7 +51,12 @@ export class CategoryService {
         if (!(await this.exists({ id })))
             throw new HttpError(404, 'Category does not exists');
 
-        // TODO: Add method to verify that the new name does not exists
+        const category = await this.prisma.category.findUnique({
+            where: { name: data.name },
+        });
+
+        if (category?.name === data.name)
+            throw new HttpError(409, `Category ${data.name} already exists`);
 
         return this.prisma.category.update({ data, where: { id } });
     }

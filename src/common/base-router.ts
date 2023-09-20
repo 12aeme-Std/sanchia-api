@@ -11,6 +11,8 @@ import rawMaterialRouter from '@raw-material/raw-material.router';
 import mixtureMachineRouter from '@mixture-machine/mixture-machine.router';
 import manufactureMachineRouter from '@manufacture-machine/manufacture-machine.router';
 import warehouseMovementRouter from '@warehouse-movement/warehouse-movement.router';
+import cartRouter from '@cart/cart.router';
+import orderRouter from 'src/order/order.router';
 
 const router = Router();
 
@@ -26,5 +28,7 @@ router.use('/mixtures', mixtureRouter);
 router.use('/manufactures', manufactureRouter);
 router.use('/raw-material', rawMaterialRouter);
 router.use('/warehouse-movement', warehouseMovementRouter);
+router.use('/cart', cartRouter);
+router.use('/order', orderRouter);
 
 export default router;

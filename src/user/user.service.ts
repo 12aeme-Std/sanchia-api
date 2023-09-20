@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient, Roles } from '@prisma/client';
 import { UserDto } from './dtos/user.dto';
 import * as bcrypt from 'bcrypt';
 import { HttpError } from '@common/http-error';
@@ -27,6 +27,12 @@ export class UserService {
             data: {
                 ...data,
                 password: hashedPwd,
+                cart:
+                    !data.role || data.role === Roles.CLIENT
+                        ? {
+                              create: {},
+                          }
+                        : undefined,
             },
             select: {
                 id: true,
