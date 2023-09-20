@@ -27,7 +27,8 @@
             "@raw-material/*": ["./src/raw-material/*"],
             "@manufacture/*": ["./src/manufacture/*"],
             "@middlewares/*": ["./src/middlewares/*"],
-            "@cart/*": ["./src/cart/*"]
+            "@cart/*": ["./src/cart/*"],
+            "@order/*": ["./src/order/*"]
         }
     }
 }

@@ -12,7 +12,7 @@ import mixtureMachineRouter from '@mixture-machine/mixture-machine.router';
 import manufactureMachineRouter from '@manufacture-machine/manufacture-machine.router';
 import warehouseMovementRouter from '@warehouse-movement/warehouse-movement.router';
 import cartRouter from '@cart/cart.router';
-import orderRouter from 'src/order/order.router';
+import orderRouter from '@order/order.router';
 
 const router = Router();
 
