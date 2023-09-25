@@ -8,6 +8,7 @@ const prisma = new PrismaClient();
 const hashedPassword = bcrypt.hashSync('pass123!', 10);
 
 export async function seeder() {
+    console.log('STARTING SEEDING PROCESS');
     const user = await prisma.user.upsert({
         where: { email: 'test-user@email.com' },
         update: { email: 'test-user@email.com' },
@@ -173,4 +174,5 @@ export async function seeder() {
             burr: 1,
         },
     });
+    console.log('COMPLETED SEEDING PROCESS');
 }
