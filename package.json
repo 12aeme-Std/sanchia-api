@@ -19,6 +19,8 @@
     "devDependencies": {
         "@types/cors": "^2.8.13",
         "@types/passport-jwt": "^3.0.9",
+        "@types/shortid": "^0.0.30",
+        "@types/uuid": "^9.0.4",
         "@typescript-eslint/eslint-plugin": "^5.62.0",
         "@typescript-eslint/parser": "^5.59.7",
         "eslint": "^8.44.0",
@@ -57,6 +59,8 @@
         "multer": "^1.4.5-lts.1",
         "passport-jwt": "^4.0.1",
         "resolve-tspaths": "^0.8.14",
-        "tspath": "^2.6.8"
+        "shortid": "^2.2.16",
+        "tspath": "^2.6.8",
+        "uuid": "^9.0.1"
     }
 }
