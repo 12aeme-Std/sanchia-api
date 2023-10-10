@@ -5,7 +5,7 @@
     "main": "server.ts",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "build": "tsc && resolve-tspaths",
+        "build": "npx prisma generate && tsc && resolve-tspaths",
         "start": "node dist/server.js",
         "debug": "DEBUG=express:* nodemon -e ts,js --exec ts-node -r tsconfig-paths/register ./src/server.ts",
         "dev": "nodemon -e ts,js --exec ts-node -r tsconfig-paths/register ./src/server.ts",

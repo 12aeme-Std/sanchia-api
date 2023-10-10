@@ -71,5 +71,4 @@ export class PlanningController {
 
         return res.send(createPlanningSchedule);
     }
-
 }
