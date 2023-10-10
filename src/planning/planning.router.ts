@@ -27,4 +27,32 @@ router.delete(
     '/:id/specs',
     planningController.deletePlanningSpecs.bind(planningController)
 );
+
+router.post(
+    '/:id/specs/:specId/schedules',
+    planningController.createPlanningSchedule.bind(planningController)
+);
+
+router.get(
+    '/:id/specs/:specId/schedules',
+    planningController.getPlanningSchedulePlanningSpec.bind(planningController)
+);
+
+router.get(
+    '/:id/specs/:specId/schedules/:scheduleId',
+    planningController.getSinglePlanningSchedule.bind(planningController)
+);
+
+router.post(
+    '/:id/specs/productions',
+    planningController.createProductionSpec.bind(planningController)
+);
+
+router.get(
+    '/:id/specs/:iden/productions',
+    planningController.getProductionByPlanSpecOrSchedule.bind(
+        planningController
+    )
+);
+
 export default router;

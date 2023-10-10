@@ -8,6 +8,7 @@ export class PlanningController {
         this.prisma = new PrismaClient();
     }
 
+    // ---------------------------------------------------------------------------------
     async create(req: Request, res: Response) {
         const createPlanning = await this.prisma.planning.create({
             data: req.body,
@@ -27,6 +28,7 @@ export class PlanningController {
         return res.send(plans);
     }
 
+    // ---------------------------------------------------------------------------------
     async createPlanningSpecs(req: Request, res: Response) {
         const createPlanningPlanningSpec =
             await this.prisma.planningSpec.create({
@@ -65,10 +67,57 @@ export class PlanningController {
         return res.send(deletePlanningPlanningSpec);
     }
 
+    // ---------------------------------------------------------------------------------
     async createPlanningSchedule(req: Request, res: Response) {
         const createPlanningSchedule =
             await this.prisma.planningSchedule.create({ data: req.body });
 
         return res.send(createPlanningSchedule);
+    }
+
+    async getPlanningSchedulePlanningSpec(req: Request, res: Response) {
+        const planningScheduleBySpec =
+            await this.prisma.planningSchedule.findMany({
+                where: { planningSpecId: Number(req.params.specId) },
+            });
+        return res.send(planningScheduleBySpec);
+    }
+
+    async getSinglePlanningSchedule(req: Request, res: Response) {
+        const planningSchedule = await this.prisma.planningSchedule.findFirst({
+            where: {
+                id: Number(req.params.scheduleId),
+                planningSpecId: Number(req.params.specId),
+            },
+        });
+        return res.send(planningSchedule);
+    }
+
+    // ---------------------------------------------------------------------------------
+    async createProductionSpec(req: Request, res: Response) {
+        const productionSpec = await this.prisma.productionSpec.create({
+            data: req.body,
+        });
+
+        return res.send(productionSpec);
+    }
+
+    async getProductionByPlanSpecOrSchedule(req: Request, res: Response) {
+        const { kind } = req.query;
+        let productionSpecs;
+        if (kind === 'schedule') {
+            productionSpecs = await this.prisma.productionSpec.findMany({
+                where: {
+                    planningScheduleId: Number(req.params.iden),
+                },
+            });
+        } else {
+            productionSpecs = await this.prisma.productionSpec.findMany({
+                where: {
+                    planningSpecId: Number(req.params.iden),
+                },
+            });
+        }
+        return res.send(productionSpecs);
     }
 }

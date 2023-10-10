@@ -461,11 +461,11 @@ model ManufactureProduct {
   name String
   type ManufactureProductType @default(PRODUCT)
 
-  recipe   Recipe @relation(fields: [recipeId], references: [id])
-  recipeId Int    @map("recipe_id")
+  recipe   Recipe? @relation(fields: [recipeId], references: [id])
+  recipeId Int?    @map("recipe_id")
 
-  manufacture    Manufacture      @relation(fields: [manufactureId], references: [id])
-  manufactureId  Int              @map("manufacture_id ")
+  manufacture    Manufacture?      @relation(fields: [manufactureId], references: [id])
+  manufactureId  Int?              @map("manufacture_id ")
   ProductionSpec ProductionSpec[]
 
   @@map("product_result")
@@ -523,8 +523,8 @@ model ProductionSpec {
   leisureTime Int @map("leisure_time")
   cycles      Int
 
-  manufactureProduct   ManufactureProduct @relation(fields: [manufactureProductId], references: [id])
-  manufactureProductId Int                @map("manufacture_product_id")
+  manufactureProduct   ManufactureProduct? @relation(fields: [manufactureProductId], references: [id])
+  manufactureProductId Int?                @map("manufacture_product_id")
 
   planningSchedule   PlanningSchedule? @relation(fields: [planningScheduleId], references: [id])
   planningScheduleId Int?              @map("planning_schedule_id")
