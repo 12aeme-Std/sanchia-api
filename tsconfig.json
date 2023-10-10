@@ -28,7 +28,8 @@
             "@manufacture/*": ["./src/manufacture/*"],
             "@middlewares/*": ["./src/middlewares/*"],
             "@cart/*": ["./src/cart/*"],
-            "@order/*": ["./src/order/*"]
+            "@order/*": ["./src/order/*"],
+            "@planning/*": ["./src/planning/*"]
         }
     }
 }

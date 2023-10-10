@@ -21,7 +21,7 @@ model User {
   updatedAt DateTime @updatedAt() @map("updated_at")
 
   cart Cart?
-  
+
   orders             Order[]
   preOrders          PreOrder[]
   warehouseMovements WarehouseMovement[]
@@ -35,8 +35,8 @@ model Product {
   description String
   price       Float
   stock       Int
-  isAvailable Boolean @default(true) @map("is_available")
-  isNew       Boolean @default(false) @map("is_new")
+  isAvailable Boolean  @default(true) @map("is_available")
+  isNew       Boolean  @default(false) @map("is_new")
   endurance   String
   color       String
   createdAt   DateTime @default(now()) @map("created_at")
@@ -60,15 +60,16 @@ model ProductDimentions {
   id Int @id @default(autoincrement())
 
   length String?
-  width String?
+  width  String?
   height String?
   weight String?
 
-  product Product @relation(fields: [productId], references: [id])
-  productId Int @map("product_id") @unique
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int     @unique @map("product_id")
 
   @@map("product_dimentions")
 }
+
 model Image {
   id Int @id @default(autoincrement())
 
@@ -96,22 +97,22 @@ model Cart {
 
   productsCarts ProductsCarts[]
 
-  user User @relation(fields: [userId], references: [id])
-  userId Int @unique @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @unique @map("user_id")
 
   @@map("cart")
 }
 
 model Order {
-  id Int  @id @default(autoincrement())
-  orderTracker    String  @default(uuid())
-  total Float @default(0)
-  store String
+  id           Int    @id @default(autoincrement())
+  orderTracker String @default(uuid())
+  total        Float  @default(0)
+  store        String
 
   orderedAt DateTime @default(now()) @map("ordered_at")
 
   user   User @relation(fields: [userId], references: [id])
-  userId Int   @map("user_id")
+  userId Int  @map("user_id")
 
   status OrderStatus
 
@@ -286,6 +287,7 @@ model ManufactureMachine {
 
   movements    WarehouseMovement[]
   manufactures Manufacture[]
+  PlanningSpec PlanningSpec[]
 
   @@map("manufacture_machine")
 }
@@ -363,6 +365,7 @@ model Recipe {
   type RecipeType @default(FINAL_PRODUCT)
 
   manufactureProducts ManufactureProduct[]
+  ProductionSpec      ProductionSpec[]
 
   @@map("recipe")
 }
@@ -461,10 +464,81 @@ model ManufactureProduct {
   recipe   Recipe @relation(fields: [recipeId], references: [id])
   recipeId Int    @map("recipe_id")
 
-  manufacture   Manufacture @relation(fields: [manufactureId], references: [id])
-  manufactureId Int         @map("manufacture_id ")
+  manufacture    Manufacture      @relation(fields: [manufactureId], references: [id])
+  manufactureId  Int              @map("manufacture_id ")
+  ProductionSpec ProductionSpec[]
 
   @@map("product_result")
+}
+
+//Plantifications
+model Planning {
+  id           Int            @id @default(autoincrement())
+  code         String
+  schedule     String
+  PlanningSpec PlanningSpec[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+
+  @@map("planning")
+}
+
+model PlanningSpec {
+  id                 Int     @id @default(autoincrement())
+  isMultipleSchedule Boolean @default(false) @map("is_multiple_schedule")
+  responsibleName    String  @map("responsible_name")
+
+  manufactureMachine   ManufactureMachine @relation(fields: [manufactureMachineId], references: [id])
+  manufactureMachineId Int                @map("manufacture_machine_id")
+
+  planning   Planning @relation(fields: [planningId], references: [id])
+  planningId Int      @map("planning_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+
+  PlanningSchedule PlanningSchedule[]
+  ProductionSpec   ProductionSpec[]
+
+  @@map("planning_spec")
+}
+
+model PlanningSchedule {
+  id             Int              @id @default(autoincrement())
+  code           String
+  duration       Int
+  planningSpec   PlanningSpec     @relation(fields: [planningSpecId], references: [id])
+  planningSpecId Int              @map("planning_spec_id")
+  ProductionSpec ProductionSpec[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+
+  @@map("planning_schedule")
+}
+
+model ProductionSpec {
+  id          Int @id @default(autoincrement())
+  leisureTime Int @map("leisure_time")
+  cycles      Int
+
+  manufactureProduct   ManufactureProduct @relation(fields: [manufactureProductId], references: [id])
+  manufactureProductId Int                @map("manufacture_product_id")
+
+  planningSchedule   PlanningSchedule? @relation(fields: [planningScheduleId], references: [id])
+  planningScheduleId Int?              @map("planning_schedule_id")
+
+  planningSpec   PlanningSpec? @relation(fields: [planningSpecId], references: [id])
+  planningSpecId Int?          @map("planning_spec_id")
+
+  recipe   Recipe? @relation(fields: [recipeId], references: [id])
+  recipeId Int?    @map("recipe_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+
+  @@map("production_spec")
 }
 
 enum OrderStatus {
