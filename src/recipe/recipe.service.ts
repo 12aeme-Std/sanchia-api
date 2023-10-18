@@ -252,8 +252,7 @@ export class RecipeService {
             orderBy,
             cursor,
             include: {
-                mixtures: true,
-                resources: true,
+                resources: { include: { rawMaterial: true } },
                 parent: true,
                 variants: true,
             },

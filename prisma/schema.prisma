@@ -464,8 +464,8 @@ model ManufactureProduct {
   recipe   Recipe? @relation(fields: [recipeId], references: [id])
   recipeId Int?    @map("recipe_id")
 
-  manufacture    Manufacture?      @relation(fields: [manufactureId], references: [id])
-  manufactureId  Int?              @map("manufacture_id ")
+  manufacture    Manufacture?     @relation(fields: [manufactureId], references: [id])
+  manufactureId  Int?             @map("manufacture_id ")
   ProductionSpec ProductionSpec[]
 
   @@map("product_result")
@@ -476,6 +476,7 @@ model Planning {
   id           Int            @id @default(autoincrement())
   code         String
   schedule     String
+  status       PlanningStatus?
   PlanningSpec PlanningSpec[]
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -539,6 +540,15 @@ model ProductionSpec {
   updatedAt DateTime @updatedAt() @map("updated_at")
 
   @@map("production_spec")
+}
+
+enum PlanningStatus {
+  ACTIVE
+  INACTIVE
+  ON_HOLD
+  DELETED
+
+  @@map("planning_status")
 }
 
 enum OrderStatus {
