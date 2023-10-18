@@ -11,6 +11,12 @@ router.post(
     '/result',
     manufactureController.finishManufactureProcess.bind(manufactureController)
 );
+router.get(
+    '/products',
+    manufactureController.getManufactureProductsWithRecipe.bind(
+        manufactureController
+    )
+);
 router.post('/', manufactureController.create.bind(manufactureController));
 
 router.get('/:id', manufactureController.findOne.bind(manufactureController));

@@ -2,12 +2,15 @@ import validateSchema from '@middlewares/validation.mid';
 import { ManufactureService } from './manufacture.service';
 import { Request, Response } from 'express';
 import { createManufactureSchema } from './manufacture.validator';
+import { PrismaClient } from '@prisma/client';
 
 export class ManufactureController {
     private readonly manufactureService: ManufactureService;
+    private readonly prisma: PrismaClient;
 
     constructor() {
         this.manufactureService = new ManufactureService();
+        this.prisma = new PrismaClient();
     }
 
     async create(req: Request, res: Response) {
@@ -43,5 +46,17 @@ export class ManufactureController {
             .json(
                 await this.manufactureService.finishManufactureProcess(req.body)
             );
+    }
+
+    async getManufactureProductsWithRecipe(req: Request, res: Response) {
+        const recipes = await this.prisma.manufactureProduct.findMany({
+            include: {
+                recipe: {
+                    include: { resources: { include: { rawMaterial: true } } },
+                },
+            },
+        });
+
+        return res.send(recipes);
     }
 }
