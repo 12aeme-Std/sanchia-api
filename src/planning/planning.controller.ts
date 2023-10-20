@@ -168,19 +168,20 @@ export class PlanningController {
             where: { id: Number(req.params.id) },
         });
 
-        const maquinas = rawData?.PlanningSpec.map((planSpec) => {
-            return planSpec.manufactureMachine.name;
-        });
+        const maquinas =
+            rawData?.PlanningSpec.map((planSpec) => {
+                return planSpec.manufactureMachine.name;
+            }) ?? [];
 
         const resourcesOnMachines: Array<{
             machine: ManufactureMachine;
             resources:
-                | Array<
-                      ResourceOnRecipe & {
-                          rawMaterial: RawMaterial | null;
-                      }
-                  >
-                | undefined;
+            | Array<
+                ResourceOnRecipe & {
+                    rawMaterial: RawMaterial | null;
+                }
+            >
+            | undefined;
         }> = [];
 
         const rawMaterialsAndMachines: any = [];
@@ -206,18 +207,33 @@ export class PlanningController {
 
         const finalData: Array<{
             rawMaterial: any; // (RawMaterial & { requiredMaterial: number }) | null;
-            machines: any; // Array<ManufactureMachine & { quanity: number }> | null;
+            machines: any[]; // Array<ManufactureMachine & { quanity: number }> | null;
         }> = [];
 
         resourcesOnMachines.forEach((row) => {
             row.resources?.forEach((raw) => {
-                finalData.push({
-                    rawMaterial: {
-                        ...raw.rawMaterial,
-                        totalRequiredMaterial: 0,
-                    },
-                    machines: [{ ...row.machine, requiredMaterial: 0 }],
-                });
+                // Primero tengo que buscar el indice
+                // Separa primer insercion a segunda
+                const dataIndex = finalData.findIndex(
+                    (data) => data.rawMaterial.id === raw.rawMaterial?.id
+                );
+
+                if (dataIndex >= 0) {
+                    // Lo encontro
+                    finalData[dataIndex].machines.push({
+                        ...row.machine,
+                        requiredMaterial: 0,
+                    });
+                } else {
+                    // Es nuevo
+                    finalData.push({
+                        rawMaterial: {
+                            ...raw.rawMaterial,
+                            totalRequiredMaterial: 0,
+                        },
+                        machines: [{ ...row.machine, requiredMaterial: 0 }],
+                    });
+                }
             });
         });
 
