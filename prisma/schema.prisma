@@ -372,6 +372,7 @@ model Recipe {
 
 model ResourceOnRecipe {
   id Int @id @default(autoincrement())
+  requiredMaterial Float @default(0.0)
 
   rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id])
   rawMaterialId Int?         @map("raw_material_id")

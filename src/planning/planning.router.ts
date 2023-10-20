@@ -12,6 +12,11 @@ router.get('/:id', planningController.getSinglePlan.bind(planningController));
 router.post('/', planningController.create.bind(planningController));
 
 router.get(
+    '/:id/reports',
+    planningController.getReportData.bind(planningController)
+);
+
+router.get(
     '/:id/specs',
     planningController.getPlanningSpecsByPlan.bind(planningController)
 );

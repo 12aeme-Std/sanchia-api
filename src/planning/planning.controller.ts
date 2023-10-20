@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import {
+    ManufactureMachine,
+    PrismaClient,
+    RawMaterial,
+    ResourceOnRecipe,
+} from '@prisma/client';
 
 export class PlanningController {
     private readonly prisma: PrismaClient;
@@ -119,5 +124,106 @@ export class PlanningController {
             });
         }
         return res.send(productionSpecs);
+    }
+
+    async getReportData(req: Request, res: Response) {
+        const rawData = await this.prisma.planning.findFirst({
+            include: {
+                PlanningSpec: {
+                    include: {
+                        PlanningSchedule: {
+                            include: {
+                                ProductionSpec: {
+                                    include: {
+                                        recipe: {
+                                            include: {
+                                                resources: {
+                                                    include: {
+                                                        rawMaterial: true,
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        manufactureMachine: true,
+                        ProductionSpec: {
+                            include: {
+                                recipe: {
+                                    include: {
+                                        resources: {
+                                            include: {
+                                                rawMaterial: true,
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            where: { id: Number(req.params.id) },
+        });
+
+        const maquinas = rawData?.PlanningSpec.map((planSpec) => {
+            return planSpec.manufactureMachine.name;
+        });
+
+        const resourcesOnMachines: Array<{
+            machine: ManufactureMachine;
+            resources:
+                | Array<
+                      ResourceOnRecipe & {
+                          rawMaterial: RawMaterial | null;
+                      }
+                  >
+                | undefined;
+        }> = [];
+
+        const rawMaterialsAndMachines: any = [];
+        rawData?.PlanningSpec.forEach((planSpec) => {
+            if (planSpec.isMultipleSchedule) {
+                planSpec.PlanningSchedule.forEach((plannSche) => {
+                    plannSche.ProductionSpec.forEach((prodSpec) => {
+                        resourcesOnMachines.push({
+                            machine: planSpec.manufactureMachine,
+                            resources: prodSpec.recipe?.resources,
+                        });
+                    });
+                });
+            } else {
+                planSpec.ProductionSpec.forEach((prodSpec) => {
+                    resourcesOnMachines.push({
+                        machine: planSpec.manufactureMachine,
+                        resources: prodSpec.recipe?.resources,
+                    });
+                });
+            }
+        });
+
+        const finalData: Array<{
+            rawMaterial: any; // (RawMaterial & { requiredMaterial: number }) | null;
+            machines: any; // Array<ManufactureMachine & { quanity: number }> | null;
+        }> = [];
+
+        resourcesOnMachines.forEach((row) => {
+            row.resources?.forEach((raw) => {
+                finalData.push({
+                    rawMaterial: {
+                        ...raw.rawMaterial,
+                        totalRequiredMaterial: 0,
+                    },
+                    machines: [{ ...row.machine, requiredMaterial: 0 }],
+                });
+            });
+        });
+
+        res.send({
+            maquinas,
+            rows: finalData,
+        });
     }
 }
