@@ -3,11 +3,13 @@ import { Request, Response } from 'express';
 import {
     ManufactureMachine,
     PrismaClient,
+    ProductionSpec,
     RawMaterial,
     ResourceOnRecipe,
 } from '@prisma/client';
 import sql from 'mssql';
 import { CreateRawMaterialDto } from '@raw-material/dtos/create-raw-material.dto';
+import _ from 'lodash';
 
 export class PlanningController {
     private readonly prisma: PrismaClient;
@@ -178,12 +180,13 @@ export class PlanningController {
         const resourcesOnMachines: Array<{
             machine: ManufactureMachine;
             resources:
-                | Array<
-                      ResourceOnRecipe & {
-                          rawMaterial: RawMaterial | null;
-                      }
-                  >
-                | undefined;
+            | Array<
+                ResourceOnRecipe & {
+                    rawMaterial: RawMaterial | null;
+                }
+            >
+            | undefined;
+            production: ProductionSpec;
         }> = [];
 
         const rawMaterialsAndMachines: any = [];
@@ -194,6 +197,7 @@ export class PlanningController {
                         resourcesOnMachines.push({
                             machine: planSpec.manufactureMachine,
                             resources: prodSpec.recipe?.resources,
+                            production: prodSpec,
                         });
                     });
                 });
@@ -202,6 +206,7 @@ export class PlanningController {
                     resourcesOnMachines.push({
                         machine: planSpec.manufactureMachine,
                         resources: prodSpec.recipe?.resources,
+                        production: prodSpec,
                     });
                 });
             }
@@ -222,21 +227,49 @@ export class PlanningController {
 
                 if (dataIndex >= 0) {
                     // Lo encontro
+                    const schedule = rawData?.schedule === 'AM' ? 13 : 11;
+
                     finalData[dataIndex].machines.push({
                         ...row.machine,
-                        requiredMaterial: raw.requiredMaterial,
+                        requiredMaterial: Number(
+                            (
+                                ((schedule * 60 * 60) / row.production.cycles) *
+                                raw.requiredMaterial
+                            ).toFixed(4)
+                        ),
                     });
+
+                    finalData[dataIndex].rawMaterial.totalRequiredMaterial =
+                        Number(
+                            _.sumBy(
+                                finalData[dataIndex].machines,
+                                'requiredMaterial'
+                            ).toFixed(4)
+                        );
                 } else {
                     // Es nuevo
+                    const schedule = rawData?.schedule === 'AM' ? 13 : 11;
                     finalData.push({
                         rawMaterial: {
                             ...raw.rawMaterial,
-                            totalRequiredMaterial: raw.requiredMaterial,
+                            totalRequiredMaterial: Number(
+                                (
+                                    ((schedule * 60 * 60) /
+                                        row.production.cycles) *
+                                    raw.requiredMaterial
+                                ).toFixed(4)
+                            ),
                         },
                         machines: [
                             {
                                 ...row.machine,
-                                requiredMaterial: raw.requiredMaterial,
+                                requiredMaterial: Number(
+                                    (
+                                        ((schedule * 60 * 60) /
+                                            row.production.cycles) *
+                                        raw.requiredMaterial
+                                    ).toFixed(4)
+                                ),
                             },
                         ],
                     });
