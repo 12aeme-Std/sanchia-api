@@ -6,6 +6,8 @@ import {
     RawMaterial,
     ResourceOnRecipe,
 } from '@prisma/client';
+import sql from 'mssql';
+import { CreateRawMaterialDto } from '@raw-material/dtos/create-raw-material.dto';
 
 export class PlanningController {
     private readonly prisma: PrismaClient;
@@ -176,12 +178,12 @@ export class PlanningController {
         const resourcesOnMachines: Array<{
             machine: ManufactureMachine;
             resources:
-            | Array<
-                ResourceOnRecipe & {
-                    rawMaterial: RawMaterial | null;
-                }
-            >
-            | undefined;
+                | Array<
+                      ResourceOnRecipe & {
+                          rawMaterial: RawMaterial | null;
+                      }
+                  >
+                | undefined;
         }> = [];
 
         const rawMaterialsAndMachines: any = [];
@@ -222,16 +224,21 @@ export class PlanningController {
                     // Lo encontro
                     finalData[dataIndex].machines.push({
                         ...row.machine,
-                        requiredMaterial: 0,
+                        requiredMaterial: raw.requiredMaterial,
                     });
                 } else {
                     // Es nuevo
                     finalData.push({
                         rawMaterial: {
                             ...raw.rawMaterial,
-                            totalRequiredMaterial: 0,
+                            totalRequiredMaterial: raw.requiredMaterial,
                         },
-                        machines: [{ ...row.machine, requiredMaterial: 0 }],
+                        machines: [
+                            {
+                                ...row.machine,
+                                requiredMaterial: raw.requiredMaterial,
+                            },
+                        ],
                     });
                 }
             });
@@ -241,5 +248,71 @@ export class PlanningController {
             maquinas,
             rows: finalData,
         });
+    }
+
+    async syncData(req: Request, res: Response) {
+        try {
+            await sql.connect({
+                user: 'olimporeader',
+                password: 'olimporeader',
+                database: 'master',
+                server: 'sanchia.bitconsultores.net',
+                port: 2034,
+                pool: {
+                    max: 10,
+                    min: 0,
+                    idleTimeoutMillis: 30000,
+                },
+                options: {
+                    encrypt: false,
+                    trustServerCertificate: false,
+                },
+            });
+
+            const result = await sql.query`
+                SELECT 
+                    MXP.mxprId,
+                    CP.cprNombre as [categoria],
+                    PR.proId as [prodId],
+                    PR.proCodigo AS [codigoProducto],
+                    PR.proNombre As [nombreProducto],
+                    MT.proId as [matId],
+                    MT.proCodigo AS [codigoMaterial],
+                    MT.proNombre AS [nombreMaterial],
+                    PR.cprId as [idCategorias],
+                    MXP.*
+                FROM 
+                    olComun.dbo.MaterialesXProducto MXP
+                LEFT JOIN olComun.dbo.Productos PR WITH (NOLOCK) on MXP.proId = PR.proId
+                LEFT JOIN olComun.dbo.Productos MT WITH (NOLOCK) on MXP.proIdMaterial  = MT.proId
+                LEFT JOIN olComun.dbo.CategoriasProductos CP WITH (NOLOCK) on CP.cprId = MT.cprId
+                where MT.cprId = 2644; 
+            `;
+            const creationData: any[] = [];
+            result.recordset.forEach((product: any) => {
+                // Condicion para si existe
+                const dataIndex = creationData.findIndex(
+                    (data) => data.olimId === product.matId
+                );
+
+                if (dataIndex < 0) {
+                    creationData.push({
+                        olimId: product.matId,
+                        code: product.codigoMaterial,
+                        name: product.nombreMaterial,
+                        category: product.categoria,
+                        stock: 0,
+                        warehouseId: 1,
+                    });
+                }
+            });
+            const createMaterials = await this.prisma.rawMaterial.createMany({
+                data: creationData,
+            });
+
+            res.send(createMaterials);
+        } catch (error) {
+            res.send(error);
+        }
     }
 }

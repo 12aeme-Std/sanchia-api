@@ -371,7 +371,7 @@ model Recipe {
 }
 
 model ResourceOnRecipe {
-  id Int @id @default(autoincrement())
+  id               Int   @id @default(autoincrement())
   requiredMaterial Float @default(0.0)
 
   rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id])
@@ -387,9 +387,12 @@ model ResourceOnRecipe {
 }
 
 model RawMaterial {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  stock Int    @default(0)
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  stock    Int     @default(0)
+  category String?
+  code     String?
+  olimId   Int?    @unique
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt() @map("updated_at")
@@ -458,9 +461,11 @@ model ManufactureResult {
 }
 
 model ManufactureProduct {
-  id   Int                    @id @default(autoincrement())
-  name String
-  type ManufactureProductType @default(PRODUCT)
+  id     Int                    @id @default(autoincrement())
+  name   String
+  type   ManufactureProductType @default(PRODUCT)
+  code   String?
+  olimId Int?                   @unique
 
   recipe   Recipe? @relation(fields: [recipeId], references: [id])
   recipeId Int?    @map("recipe_id")
@@ -474,7 +479,7 @@ model ManufactureProduct {
 
 //Plantifications
 model Planning {
-  id           Int            @id @default(autoincrement())
+  id           Int             @id @default(autoincrement())
   code         String
   schedule     String
   status       PlanningStatus?
