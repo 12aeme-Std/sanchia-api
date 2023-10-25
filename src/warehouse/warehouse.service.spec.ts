@@ -1,6 +1,7 @@
 import { Context, MockContext, createMockContext } from '@tests/context';
 import { WarehouseService } from './warehouse.service';
 import { allWarehoseMocks, warehouseMock } from '@tests/mocks/warehouse.mock';
+import { WarehoseType } from '@prisma/client';
 
 let mockCtx: MockContext;
 let ctx: Context;
@@ -24,7 +25,7 @@ describe('ProductService', () => {
             const data = {
                 name: 'WAREHOUSE_01',
                 description: 'lorem ipsum dolor',
-                type: 'RAW_MATERIAL',
+                type: WarehoseType.RAW_MATERIAL,
             };
 
             mockCtx.prisma.warehouse.findUnique.mockResolvedValue(null);
@@ -42,7 +43,7 @@ describe('ProductService', () => {
             const data = {
                 name: 'WAREHOUSE_01',
                 description: 'lorem ipsum dolor',
-                type: 'RAW_MATERIAL',
+                type: WarehoseType.RAW_MATERIAL,
             };
 
             mockCtx.prisma.warehouse.findUnique.mockResolvedValue(

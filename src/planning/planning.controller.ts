@@ -180,12 +180,12 @@ export class PlanningController {
         const resourcesOnMachines: Array<{
             machine: ManufactureMachine;
             resources:
-            | Array<
-                ResourceOnRecipe & {
-                    rawMaterial: RawMaterial | null;
-                }
-            >
-            | undefined;
+                | Array<
+                      ResourceOnRecipe & {
+                          rawMaterial: RawMaterial | null;
+                      }
+                  >
+                | undefined;
             production: ProductionSpec;
         }> = [];
 

@@ -1,6 +1,9 @@
+import { WarehoseType } from '@prisma/client';
+
 export const warehouseMock = {
     id: 1,
     name: 'WAREHOUSE_01',
+    type: WarehoseType.RAW_MATERIAL,
     description: 'lorem ipsum dolor',
     createdAt: new Date('2023-08-24T06:27:18.733Z'),
     updatedAt: new Date('2023-08-24T06:27:18.733Z'),
@@ -10,6 +13,7 @@ export const allWarehoseMocks = [
     {
         id: 1,
         name: 'WAREHOUSE_01',
+        type: WarehoseType.RAW_MATERIAL,
         description: 'lorem ipsum dolor',
         createdAt: new Date('2023-08-24T06:27:18.733Z'),
         updatedAt: new Date('2023-08-24T06:27:18.733Z'),
@@ -17,6 +21,7 @@ export const allWarehoseMocks = [
     {
         id: 2,
         name: 'WAREHOUSE_02',
+        type: WarehoseType.RAW_MATERIAL,
         description: 'lorem ipsum dolor',
         createdAt: new Date('2023-08-25T23:19:10.883Z'),
         updatedAt: new Date('2023-08-25T23:19:10.883Z'),
@@ -24,6 +29,7 @@ export const allWarehoseMocks = [
     {
         id: 3,
         name: 'WAREHOUSE_02',
+        type: WarehoseType.RAW_MATERIAL,
         description: 'lorem ipsum dolor',
         createdAt: new Date('2023-08-29T20:43:30.790Z'),
         updatedAt: new Date('2023-08-29T20:43:30.790Z'),
