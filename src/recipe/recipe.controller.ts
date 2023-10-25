@@ -11,6 +11,12 @@ export class RecipeController {
         this.recipeService = new RecipeService();
     }
 
+    async findByManufactureProduct(req: Request, res: Response) {
+        return res.send(
+           await this.recipeService.findByMProduct(Number(req.params.mpId))
+        );
+    }
+
     async create(req: Request, res: Response) {
         validateSchema(req.body, CreateRecipeSchema);
         return res.status(200).json(await this.recipeService.create(req.body));

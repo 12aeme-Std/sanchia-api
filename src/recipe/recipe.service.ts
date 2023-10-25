@@ -190,6 +190,15 @@ export class RecipeService {
         });
     }
 
+    async findByMProduct(manufactureProductId: number) {
+        const recipesByManufactureProducts = await this.prisma.recipe.findMany({
+            include: { resources: { include: { rawMaterial: true } } },
+            where: { manufactureProductId },
+        });
+
+        return recipesByManufactureProducts;
+    }
+
     async findOne(where: Prisma.RecipeWhereUniqueInput): Promise<RecipeDto> {
         const recipe = await this.prisma.recipe
             .findUniqueOrThrow({

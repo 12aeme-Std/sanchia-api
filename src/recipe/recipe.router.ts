@@ -1,14 +1,19 @@
 import { Router } from 'express';
 import { RecipeController } from './recipe.controller';
-import passport from 'passport';
+// import passport from 'passport';
 
 const router = Router();
 const recipeController = new RecipeController();
 
-router.use(passport.authenticate('jwt', { session: false }));
+// router.use(passport.authenticate('jwt', { session: false }));
 
 router.post('/', recipeController.create.bind(recipeController));
 router.post('/:id', recipeController.createVariant.bind(recipeController));
+
+router.get(
+    '/manufacture-products/:mpId',
+    recipeController.findByManufactureProduct.bind(recipeController)
+);
 
 router.get(
     '/:id/variants',

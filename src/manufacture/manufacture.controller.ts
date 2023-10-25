@@ -49,13 +49,7 @@ export class ManufactureController {
     }
 
     async getManufactureProductsWithRecipe(req: Request, res: Response) {
-        const recipes = await this.prisma.manufactureProduct.findMany({
-            include: {
-                recipe: {
-                    include: { resources: { include: { rawMaterial: true } } },
-                },
-            },
-        });
+        const recipes = await this.prisma.manufactureProduct.findMany();
 
         return res.send(recipes);
     }
