@@ -360,11 +360,13 @@ model Recipe {
   parentId Int?
   parent   Recipe? @relation("RecipeVariants", fields: [parentId], references: [id])
 
+  manufactureProduct   ManufactureProduct? @relation(fields: [manufactureProductId], references: [id])
+  manufactureProductId Int?                @map("manufacture_product_id")
+
   variants Recipe[] @relation("RecipeVariants")
 
   type RecipeType @default(FINAL_PRODUCT)
 
-  manufactureProducts ManufactureProduct[]
   ProductionSpec      ProductionSpec[]
 
   @@map("recipe")
@@ -467,12 +469,10 @@ model ManufactureProduct {
   code   String?
   olimId Int?                   @unique
 
-  recipe   Recipe? @relation(fields: [recipeId], references: [id])
-  recipeId Int?    @map("recipe_id")
-
   manufacture    Manufacture?     @relation(fields: [manufactureId], references: [id])
   manufactureId  Int?             @map("manufacture_id ")
   ProductionSpec ProductionSpec[]
+  Recipe         Recipe[]
 
   @@map("product_result")
 }
