@@ -8,7 +8,7 @@ export class RecipeService {
     private readonly prisma: PrismaClient;
 
     constructor(p?: PrismaClient) {
-        this.prisma = p ??  new PrismaClient();
+        this.prisma = p ?? new PrismaClient();
     }
 
     async create(data: CreateRecipeDto) {

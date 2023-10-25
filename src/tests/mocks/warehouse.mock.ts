@@ -4,7 +4,7 @@ export const warehouseMock = {
     description: 'lorem ipsum dolor',
     createdAt: new Date('2023-08-24T06:27:18.733Z'),
     updatedAt: new Date('2023-08-24T06:27:18.733Z'),
-}
+};
 
 export const allWarehoseMocks = [
     {

@@ -8,7 +8,7 @@ export class UserService {
     private readonly prisma: PrismaClient;
 
     constructor(p?: PrismaClient) {
-        this.prisma = p ??  new PrismaClient();
+        this.prisma = p ?? new PrismaClient();
     }
 
     async register(data: Prisma.UserCreateInput): Promise<UserDto> {
