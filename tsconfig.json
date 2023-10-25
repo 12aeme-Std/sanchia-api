@@ -26,7 +26,8 @@
             "@mixture/*": ["./src/mixture/*"],
             "@raw-material/*": ["./src/raw-material/*"],
             "@manufacture/*": ["./src/manufacture/*"],
-            "@middlewares/*": ["./src/middlewares/*"]
+            "@middlewares/*": ["./src/middlewares/*"],
+            "@tests/*": ["./src/tests/*"]
         }
     }
 }

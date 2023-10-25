@@ -7,8 +7,8 @@ import { IPagination } from '@common/interfaces/pagination.interface';
 export class UserService {
     private readonly prisma: PrismaClient;
 
-    constructor() {
-        this.prisma = new PrismaClient();
+    constructor(p?: PrismaClient) {
+        this.prisma = p ??  new PrismaClient();
     }
 
     async register(data: Prisma.UserCreateInput): Promise<UserDto> {

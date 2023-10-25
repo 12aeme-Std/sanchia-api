@@ -1,0 +1,29 @@
+{
+    "preset": "ts-jest",
+    "moduleFileExtensions": ["js", "jsx", "ts", "tsx", "json", "node", "mjs"],
+    "testEnvironment": "node",
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    
+    "moduleNameMapper": {
+        "@tests/(.*)": "<rootDir>/tests/$1",
+        "@config/(.*)": "<rootDir>/config/$1",
+        "@user/(.*)": "<rootDir>/user/$1",
+        "@auth/(.*)": "<rootDir>/auth/$1",
+        "@product/(.*)": "<rootDir>/product/$1",
+        "@common/(.*)": "<rootDir>/common/$1",
+        "@category/(.*)": "<rootDir>/category/$1",
+        "@warehouse/(.*)": "<rootDir>/warehouse/$1",
+        "@warehouse-movement/(.*)": "<rootDir>/warehouse-movement/$1",
+        "@mixture-machine/(.*)": "<rootDir>/mixture-machine/$1",
+        "@manufacture-machine/(.*)": "<rootDir>/manufacture-machine/$1",
+        "@recipe/(.*)": "<rootDir>/recipe/$1",
+        "@mixture/(.*)": "<rootDir>/mixture/$1",
+        "@raw-material/(.*)": "<rootDir>/raw-material/$1",
+        "@manufacture/(.*)": "<rootDir>/manufacture/$1",
+        "@middlewares/(.*)": "<rootDir>/middlewares/$1"
+    }
+}

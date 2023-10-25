@@ -8,8 +8,8 @@ import { CreateMixtureResultDto } from './dtos/create-result.dto';
 export class MixtureService {
     private readonly prisma: PrismaClient;
 
-    constructor() {
-        this.prisma = new PrismaClient();
+    constructor(p?: PrismaClient) {
+        this.prisma = p ??  new PrismaClient();
     }
 
     async create(data: CreateMixtureDto) {

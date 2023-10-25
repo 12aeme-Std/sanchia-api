@@ -9,8 +9,8 @@ export class RawMaterialService {
     private readonly prisma: PrismaClient;
     private readonly warehouseService: WarehouseService;
 
-    constructor() {
-        this.prisma = new PrismaClient();
+    constructor(p?: PrismaClient) {
+        this.prisma = p ?? new PrismaClient();
         this.warehouseService = new WarehouseService();
     }
 

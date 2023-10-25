@@ -7,8 +7,8 @@ import { CreateRecipeDto } from './dtos/create-recipe.dto';
 export class RecipeService {
     private readonly prisma: PrismaClient;
 
-    constructor() {
-        this.prisma = new PrismaClient();
+    constructor(p?: PrismaClient) {
+        this.prisma = p ??  new PrismaClient();
     }
 
     async create(data: CreateRecipeDto) {

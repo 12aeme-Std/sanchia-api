@@ -7,8 +7,8 @@ import { CreateManufactureResultDto } from './dtos/create-result.dto';
 export class ManufactureService {
     private readonly prisma: PrismaClient;
 
-    constructor() {
-        this.prisma = new PrismaClient();
+    constructor(p?: PrismaClient) {
+        this.prisma = p ?? new PrismaClient();
     }
 
     async create(data: CreateManufactureDto) {

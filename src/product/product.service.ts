@@ -10,8 +10,8 @@ export class ProductService {
     private readonly prisma: PrismaClient;
     private readonly categoryService: CategoryService;
 
-    constructor() {
-        this.prisma = new PrismaClient();
+    constructor(p?: PrismaClient) {
+        this.prisma = p ?? new PrismaClient();
         this.categoryService = new CategoryService();
     }
 
