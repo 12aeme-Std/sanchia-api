@@ -4,6 +4,7 @@ import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { CreateMixtureDto } from './dtos/create-mixture.dto';
 import { CreateMixtureResultDto } from './dtos/create-result.dto';
+import { MixtureResultDto } from './dtos/mixture-result.dto';
 
 export class MixtureService {
     private readonly prisma: PrismaClient;
@@ -103,7 +104,7 @@ export class MixtureService {
         const { page, limit, cursor, where, orderBy } = params;
 
         return this.prisma.mixture.findMany({
-            skip: page! - 1,
+            skip: limit! * (page! - 1),
             take: limit,
             cursor,
             where,
@@ -141,6 +142,27 @@ export class MixtureService {
                 },
                 finishedAt: data.finishedAt,
                 quantity: data.quantity,
+            },
+        });
+    }
+
+    async findAllResults(
+        params: IPagination & {
+            cursor?: Prisma.MixtureResultWhereUniqueInput;
+            where?: Prisma.MixtureResultWhereInput;
+            orderBy?: Prisma.MixtureResultOrderByWithAggregationInput;
+        }
+    ): Promise<MixtureResultDto[]> {
+        const { page, limit, cursor, where, orderBy } = params;
+
+        return this.prisma.mixtureResult.findMany({
+            skip: limit! * (page! - 1),
+            take: limit,
+            cursor,
+            where,
+            orderBy,
+            include: {
+                mixture: true,
             },
         });
     }

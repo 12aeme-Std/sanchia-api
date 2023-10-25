@@ -27,7 +27,10 @@
             "@raw-material/*": ["./src/raw-material/*"],
             "@manufacture/*": ["./src/manufacture/*"],
             "@middlewares/*": ["./src/middlewares/*"],
-            "@tests/*": ["./src/tests/*"]
+            "@tests/*": ["./src/tests/*"],
+            "@cart/*": ["./src/cart/*"],
+            "@order/*": ["./src/order/*"],
+            "@planning/*": ["./src/planning/*"]
         }
     }
 }

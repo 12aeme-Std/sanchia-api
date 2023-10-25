@@ -7,6 +7,7 @@ import errorHandler from './middlewares/error.mid';
 import passportConfig from './config/passport';
 import passport from 'passport';
 import cors from 'cors';
+// import { seeder } from '@config/seed';
 
 passport.use(passportConfig());
 
@@ -28,6 +29,7 @@ app.use('/api', baseRouter);
 
 app.use(errorHandler);
 
-app.listen(process.env.PORT ?? 3000, () => {
+app.listen(process.env.PORT ?? 3000, async () => {
+    // await seeder();
     console.log(`Running on port: ${process.env.PORT!}`);
 });

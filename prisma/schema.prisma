@@ -15,12 +15,13 @@ model User {
   password String
 
   accessToken String? @map("acccess_token")
-  role        Roles   @default(SELLER)
+  role        Roles   @default(CLIENT)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt() @map("updated_at")
 
-  carts              Cart[]
+  cart Cart?
+
   orders             Order[]
   preOrders          PreOrder[]
   warehouseMovements WarehouseMovement[]
@@ -34,11 +35,17 @@ model Product {
   description String
   price       Float
   stock       Int
+  isAvailable Boolean  @default(true) @map("is_available")
+  isNew       Boolean  @default(false) @map("is_new")
+  endurance   String
+  color       String
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt() @map("updated_at")
 
   category   Category @relation(fields: [categoryId], references: [id])
   categoryId Int      @map("category_id")
+
+  productDimentions ProductDimentions?
 
   images           Image[]
   productsCarts    ProductsCarts[]
@@ -47,6 +54,20 @@ model Product {
   preorderProducts PreorderProducts[]
 
   @@map("product")
+}
+
+model ProductDimentions {
+  id Int @id @default(autoincrement())
+
+  length String?
+  width  String?
+  height String?
+  weight String?
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int     @unique @map("product_id")
+
+  @@map("product_dimentions")
 }
 
 model Image {
@@ -76,20 +97,24 @@ model Cart {
 
   productsCarts ProductsCarts[]
 
-  user   User? @relation(fields: [userId], references: [id])
-  userId Int   @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @unique @map("user_id")
 
   @@map("cart")
 }
 
 model Order {
-  id    Int   @id @default(autoincrement())
-  total Float @default(0)
+  id           Int    @id @default(autoincrement())
+  orderTracker String @default(uuid())
+  total        Float  @default(0)
+  store        String
 
   orderedAt DateTime @default(now()) @map("ordered_at")
 
-  user   User? @relation(fields: [userId], references: [id])
-  userId Int   @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @map("user_id")
+
+  status OrderStatus
 
   productsOrders ProductsOrders[]
 
@@ -190,15 +215,18 @@ model PromosOrders {
 }
 
 model Warehouse {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  description String   @db.Text
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt() @map("updated_at")
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  description String       @db.Text
+  type        WarehoseType @default(RAW_MATERIAL)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt() @map("updated_at")
 
   rawMaterials                  RawMaterial[]
+  mixturesResults               MixtureResult[]
   warehouseMovementOrigins      WarehouseMovement[] @relation("origin")
   warehouseMovementDestinations WarehouseMovement[] @relation("destination")
+  manufactureResult             ManufactureResult[]
 
   @@map("warehouse")
 }
@@ -209,25 +237,34 @@ model WarehouseMovement {
   user   User @relation(fields: [userId], references: [id])
   userId Int  @map("user_id")
 
-  registeredAt DateTime      @default(now()) @map("registered_at")
-  type         WarehouseType
+  registeredAt DateTime              @default(now()) @map("registered_at")
+  type         WarehouseMovementType @default(WAREHOUSE_TO_WAREHOUSE)
 
-  warehouseOrigin   Warehouse @relation(fields: [warehouseOriginId], references: [id], name: "origin")
-  warehouseOriginId Int       @map("warehouse_origin_id")
+  warehouseOrigin   Warehouse? @relation(fields: [warehouseOriginId], references: [id], name: "origin")
+  warehouseOriginId Int?       @map("warehouse_origin_id")
 
   warehouseDestination   Warehouse? @relation(fields: [warehouseDestinationId], references: [id], name: "destination")
-  warehouseDestinationId Int?        @map("warehouse_destination_id")
+  warehouseDestinationId Int?       @map("warehouse_destination_id")
+
+  mixtureResult   MixtureResult? @relation(fields: [mixtureResultId], references: [id])
+  mixtureResultId Int?           @map("mixture_result_id")
 
   mixtureMachine   MixtureMachine? @relation(fields: [mixtureMachineId], references: [id])
-  mixtureMachineId Int?             @map("mixture_machine_id")
+  mixtureMachineId Int?            @map("mixture_machine_id")
+
+  manufactureResult   ManufactureResult? @relation(fields: [manufactureResultId], references: [id])
+  manufactureResultId Int?               @map("manufacture_result_id")
 
   manufactureMachine   ManufactureMachine? @relation(fields: [manufactureMachineId], references: [id])
-  manufactureMachineId Int?                 @map("manufacture_machine_id")
+  manufactureMachineId Int?                @map("manufacture_machine_id")
 
   quantity Int
 
-  rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
-  rawMaterialId Int         @map("raw_material_id")
+  mixture   Mixture? @relation(fields: [mixtureId], references: [id])
+  mixtureId Int?     @map("mixture_id")
+
+  rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id])
+  rawMaterialId Int?         @map("raw_material_id")
 
   @@map("warehouse_movement")
 }
@@ -250,6 +287,7 @@ model ManufactureMachine {
 
   movements    WarehouseMovement[]
   manufactures Manufacture[]
+  PlanningSpec PlanningSpec[]
 
   @@map("manufacture_machine")
 }
@@ -267,8 +305,9 @@ model Mixture {
   recipe   Recipe @relation(fields: [recipeId], references: [id])
   recipeId Int    @map("recipe_id")
 
-  materials    RawMaterialOnMixture[]
-  results      MixtureResult[]
+  materials         RawMaterialOnMixture[]
+  results           MixtureResult[]
+  warehouseMovement WarehouseMovement[]
 
   @@map("mixture")
 }
@@ -297,6 +336,11 @@ model MixtureResult {
 
   manufactures ResourcesOnManufacture[]
 
+  ResourceOnRecipe  ResourceOnRecipe[]
+  Warehouse         Warehouse?          @relation(fields: [warehouseId], references: [id])
+  warehouseId       Int?                @map("warehouse_id")
+  WarehouseMovement WarehouseMovement[]
+
   @@map("mixture_result")
 }
 
@@ -309,30 +353,46 @@ model Recipe {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  mixtures  Mixture[]
-  materials RawMaterialOnRecipe[]
+  mixtures Mixture[]
+
+  resources ResourceOnRecipe[]
+
+  parentId Int?
+  parent   Recipe? @relation("RecipeVariants", fields: [parentId], references: [id])
+
+  variants Recipe[] @relation("RecipeVariants")
+
+  type RecipeType @default(FINAL_PRODUCT)
+
+  manufactureProducts ManufactureProduct[]
+  ProductionSpec      ProductionSpec[]
 
   @@map("recipe")
 }
 
-model RawMaterialOnRecipe {
-  recipe   Recipe @relation(fields: [recipeId], references: [id])
-  recipeId Int    @map("recipe_id")
+model ResourceOnRecipe {
+  id               Int   @id @default(autoincrement())
+  requiredMaterial Float @default(0.0)
 
-  rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
-  rawMaterialId Int         @map("raw_material_id")
+  rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id])
+  rawMaterialId Int?         @map("raw_material_id")
 
-  quantity Int
+  mixtureResult   MixtureResult? @relation(fields: [mixtureResultId], references: [id])
+  mixtureResultId Int?           @map("mixture_result_id")
 
-  @@id([recipeId, rawMaterialId])
-  @@map("recipe_material")
+  recipe   Recipe? @relation(fields: [recipeId], references: [id])
+  recipeId Int?    @map("recipe_id")
+
+  @@map("recipe_resources")
 }
 
 model RawMaterial {
-  id    Int             @id @default(autoincrement())
-  name  String          @unique
-  stock Int             @default(0)
-  type  RawMaterialType @default(RAW)
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  stock    Int     @default(0)
+  category String?
+  code     String?
+  olimId   Int?    @unique
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt() @map("updated_at")
@@ -340,10 +400,10 @@ model RawMaterial {
   warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
   warehouseId Int       @map("warehouse_id")
 
-  recipes             RawMaterialOnRecipe[]
-  materialsOnMixtures RawMaterialOnMixture[]
-  manufactures        ResourcesOnManufacture[]
-  movements           WarehouseMovement[]
+  materialsOnMixtures    RawMaterialOnMixture[]
+  movements              WarehouseMovement[]
+  ResourceOnRecipe       ResourceOnRecipe[]
+  ResourcesOnManufacture ResourcesOnManufacture[]
 
   @@map("raw_material")
 }
@@ -358,8 +418,9 @@ model Manufacture {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt() @map("updated_at")
 
-  resources ResourcesOnManufacture[]
-  results   ManufactureResult[]
+  resources           ResourcesOnManufacture[]
+  results             ManufactureResult[]
+  manufactureProducts ManufactureProduct[]
 
   @@map("manufacture")
 }
@@ -371,10 +432,10 @@ model ResourcesOnManufacture {
   manufactureId Int         @map("manufacture_id")
 
   mixtureResult   MixtureResult? @relation(fields: [mixtureResultId], references: [id])
-  mixtureResultId Int?      @map("mixture_id")
+  mixtureResultId Int?           @map("mixture_id")
 
   rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id])
-  rawMaterialId Int?          @map("raw_material_id")
+  rawMaterialId Int?         @map("raw_material_id")
 
   quantity Int
 
@@ -384,13 +445,123 @@ model ResourcesOnManufacture {
 model ManufactureResult {
   id Int @id @default(autoincrement())
 
-  manufacture   Manufacture @relation(fields: [manufactureId], references: [id])
-  manufactureId Int         @map("manufacture_id")
+  waste Int
+  burr  Int
 
-  quantity   Int
   finishedAt DateTime @default(now()) @map("finished_at")
 
+  manufacture       Manufacture         @relation(fields: [manufactureId], references: [id])
+  manufactureId     Int                 @map("manufacture_id")
+  WarehouseMovement WarehouseMovement[]
+
+  Warehouse   Warehouse? @relation(fields: [warehouseId], references: [id])
+  warehouseId Int?       @map("warehouse_id")
+
   @@map("manufacture_result")
+}
+
+model ManufactureProduct {
+  id     Int                    @id @default(autoincrement())
+  name   String
+  type   ManufactureProductType @default(PRODUCT)
+  code   String?
+  olimId Int?                   @unique
+
+  recipe   Recipe? @relation(fields: [recipeId], references: [id])
+  recipeId Int?    @map("recipe_id")
+
+  manufacture    Manufacture?     @relation(fields: [manufactureId], references: [id])
+  manufactureId  Int?             @map("manufacture_id ")
+  ProductionSpec ProductionSpec[]
+
+  @@map("product_result")
+}
+
+//Plantifications
+model Planning {
+  id           Int             @id @default(autoincrement())
+  code         String
+  schedule     String
+  status       PlanningStatus?
+  PlanningSpec PlanningSpec[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+
+  @@map("planning")
+}
+
+model PlanningSpec {
+  id                 Int     @id @default(autoincrement())
+  isMultipleSchedule Boolean @default(false) @map("is_multiple_schedule")
+  responsibleName    String  @map("responsible_name")
+
+  manufactureMachine   ManufactureMachine @relation(fields: [manufactureMachineId], references: [id])
+  manufactureMachineId Int                @map("manufacture_machine_id")
+
+  planning   Planning @relation(fields: [planningId], references: [id])
+  planningId Int      @map("planning_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+
+  PlanningSchedule PlanningSchedule[]
+  ProductionSpec   ProductionSpec[]
+
+  @@map("planning_spec")
+}
+
+model PlanningSchedule {
+  id             Int              @id @default(autoincrement())
+  code           String
+  duration       Int
+  planningSpec   PlanningSpec     @relation(fields: [planningSpecId], references: [id])
+  planningSpecId Int              @map("planning_spec_id")
+  ProductionSpec ProductionSpec[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+
+  @@map("planning_schedule")
+}
+
+model ProductionSpec {
+  id          Int @id @default(autoincrement())
+  leisureTime Int @map("leisure_time")
+  cycles      Int
+
+  manufactureProduct   ManufactureProduct? @relation(fields: [manufactureProductId], references: [id])
+  manufactureProductId Int?                @map("manufacture_product_id")
+
+  planningSchedule   PlanningSchedule? @relation(fields: [planningScheduleId], references: [id])
+  planningScheduleId Int?              @map("planning_schedule_id")
+
+  planningSpec   PlanningSpec? @relation(fields: [planningSpecId], references: [id])
+  planningSpecId Int?          @map("planning_spec_id")
+
+  recipe   Recipe? @relation(fields: [recipeId], references: [id])
+  recipeId Int?    @map("recipe_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+
+  @@map("production_spec")
+}
+
+enum PlanningStatus {
+  ACTIVE
+  INACTIVE
+  ON_HOLD
+  DELETED
+
+  @@map("planning_status")
+}
+
+enum OrderStatus {
+  FINISHED
+  PREPARING
+  ROUTE
+  CANCELLED
 }
 
 enum Roles {
@@ -417,25 +588,43 @@ enum ApplyTo {
   @@map("apply_to")
 }
 
-enum WarehouseType {
-  WAREHOUSE_TO_MACHINE
-  MIXTURE_TO_MACHINE
+enum WarehouseMovementType {
+  WAREHOUSE_TO_WAREHOUSE
+  WAREHOUSE_TO_MIXTURE_MACHINE
+  WAREHOUSE_TO_MANUFACTURE_MACHINE
+  MIXTURE_RESULT_TO_WAREHOUSE
+  MANUFACTURE_RESULT_TO_WAREHOUSE
+
+  @@map("warehouse_movement_type")
+}
+
+enum WarehoseType {
+  MIXTURE
+  RAW_MATERIAL
+  PRODUCTO
+  ASSEMPLY_PRODUCT
 
   @@map("warehouse_type")
 }
 
-enum RawMaterialType {
-  PRODUCT
-  RAW
-
-  @@map("raw_materials")
-}
-
 enum ManufactureStatus {
   PRODUCT
-  PRODUCTION
+  SEMI_PRODUCT
   REFUSE
   REJECTED
 
   @@map("manufacture_status")
+}
+
+enum RecipeType {
+  FINAL_PRODUCT
+  ASSEMBLY_PRODUCT
+  MIXTURE
+
+  @@map("recipe_types")
+}
+
+enum ManufactureProductType {
+  SEMI_PRODUCT
+  PRODUCT
 }

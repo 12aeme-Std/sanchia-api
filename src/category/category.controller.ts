@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { CategoryService } from './category.service';
 import validateSchema from '@middlewares/validation.mid';
 import { createCategorySchema } from './category.validator';
+
 export class CategoryController {
     private readonly categoryService: CategoryService;
 

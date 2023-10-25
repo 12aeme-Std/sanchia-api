@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient, RecipeType } from '@prisma/client';
 import { RecipeDto } from './dtos/recipe.dto';
 import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
@@ -24,61 +24,216 @@ export class RecipeService {
                     name: data.name,
                     description: data.description,
                     quantity: data.quantity,
+                    type: data.type,
                 },
             });
 
-            await Promise.all(
-                data.materials.map(async (materialOnRecipe) => {
-                    const material = await tx.rawMaterial.findUniqueOrThrow({
-                        where: { id: materialOnRecipe.id },
-                    });
+            if (
+                data.type === 'ASSEMBLY_PRODUCT' ||
+                data.type === 'FINAL_PRODUCT'
+            ) {
+                await Promise.all(
+                    data.materials.map(async (materialOnRecipe) => {
+                        const mixture = await tx.mixtureResult
+                            .findUniqueOrThrow({
+                                where: { id: materialOnRecipe.id },
+                            })
+                            .catch(() => {
+                                throw new HttpError(
+                                    404,
+                                    `Mixture ${materialOnRecipe.id} does not exists`
+                                );
+                            });
 
-                    return tx.rawMaterialOnRecipe.create({
-                        data: {
-                            rawMaterial: {
-                                connect: {
-                                    id: material.id,
+                        console.log('mixture', mixture);
+
+                        return tx.resourceOnRecipe.create({
+                            data: {
+                                mixtureResult: {
+                                    connect: {
+                                        id: mixture.id,
+                                    },
+                                },
+                                recipe: {
+                                    connect: {
+                                        id: recipe.id,
+                                    },
                                 },
                             },
-                            recipe: {
-                                connect: {
-                                    id: recipe.id,
+                        });
+                    })
+                );
+            } else {
+                await Promise.all(
+                    data.materials.map(async (materialOnRecipe) => {
+                        const material = await tx.rawMaterial
+                            .findUniqueOrThrow({
+                                where: { id: materialOnRecipe.id },
+                            })
+                            .catch(() => {
+                                throw new HttpError(
+                                    404,
+                                    `Mixture ${materialOnRecipe.id} does not exists`
+                                );
+                            });
+
+                        return tx.resourceOnRecipe.create({
+                            data: {
+                                rawMaterial: {
+                                    connect: {
+                                        id: material.id,
+                                    },
+                                },
+                                recipe: {
+                                    connect: {
+                                        id: recipe.id,
+                                    },
                                 },
                             },
-                            quantity: materialOnRecipe.quantity,
-                        },
-                    });
-                })
-            );
+                        });
+                    })
+                );
+            }
 
             return tx.recipe.findUniqueOrThrow({
                 where: { id: recipe.id },
-                select: {
-                    id: true,
-                    name: true,
-                    description: true,
-                    quantity: true,
-                    createdAt: true,
-                    updatedAt: true,
-                    materials: {
-                        select: {
-                            quantity: true,
-                            rawMaterial: {
-                                select: {
-                                    name: true,
+            });
+        });
+    }
+
+    async createVariant(data: CreateRecipeDto, parentId: number) {
+        return this.prisma.$transaction(async (tx) => {
+            const recipeExists = await tx.recipe.findUnique({
+                where: { name: data.name },
+            });
+
+            if (recipeExists) throw new HttpError(409, 'Recipe already exists');
+
+            const recipe = await tx.recipe.create({
+                data: {
+                    name: data.name,
+                    description: data.description,
+                    quantity: data.quantity,
+                    type: data.type,
+                    parentId,
+                },
+            });
+
+            if (
+                data.type === 'ASSEMBLY_PRODUCT' ||
+                data.type === 'FINAL_PRODUCT'
+            ) {
+                await Promise.all(
+                    data.materials.map(async (materialOnRecipe) => {
+                        const mixture = await tx.mixtureResult
+                            .findUniqueOrThrow({
+                                where: { id: materialOnRecipe.id },
+                            })
+                            .catch(() => {
+                                throw new HttpError(
+                                    404,
+                                    `Mixture ${materialOnRecipe.id} does not exists`
+                                );
+                            });
+
+                        return tx.resourceOnRecipe.create({
+                            data: {
+                                mixtureResult: {
+                                    connect: {
+                                        id: mixture.id,
+                                    },
+                                },
+                                recipe: {
+                                    connect: {
+                                        id: recipe.id,
+                                    },
                                 },
                             },
-                        },
-                    },
-                },
+                        });
+                    })
+                );
+            } else {
+                await Promise.all(
+                    data.materials.map(async (materialOnRecipe) => {
+                        const material = await tx.rawMaterial
+                            .findUniqueOrThrow({
+                                where: { id: materialOnRecipe.id },
+                            })
+                            .catch(() => {
+                                throw new HttpError(
+                                    404,
+                                    `Mixture ${materialOnRecipe.id} does not exists`
+                                );
+                            });
+
+                        return tx.resourceOnRecipe.create({
+                            data: {
+                                rawMaterial: {
+                                    connect: {
+                                        id: material.id,
+                                    },
+                                },
+                                recipe: {
+                                    connect: {
+                                        id: recipe.id,
+                                    },
+                                },
+                            },
+                        });
+                    })
+                );
+            }
+
+            return tx.recipe.findUniqueOrThrow({
+                where: { id: recipe.id },
             });
         });
     }
 
     async findOne(where: Prisma.RecipeWhereUniqueInput): Promise<RecipeDto> {
-        return this.prisma.recipe.findUniqueOrThrow({ where }).catch(() => {
-            throw new HttpError(404, 'Recipe not found');
+        const recipe = await this.prisma.recipe
+            .findUniqueOrThrow({
+                where,
+                include: {
+                    mixtures: true,
+                    resources: true,
+                    parent: true,
+                    variants: true,
+                },
+            })
+            .catch(() => {
+                throw new HttpError(404, 'Recipe not found');
+            });
+
+        return recipe;
+    }
+
+    async findByType(
+        params: IPagination & {
+            cursor?: Prisma.RecipeWhereUniqueInput;
+            orderBy?: Prisma.RecipeOrderByWithAggregationInput;
+            type: RecipeType;
+        }
+    ): Promise<RecipeDto[]> {
+        const { page, limit, cursor, orderBy, type } = params;
+
+        const recipe = await this.prisma.recipe.findMany({
+            take: limit,
+            skip: limit! * (page! - 1),
+            orderBy,
+            cursor,
+            where: {
+                type,
+            },
+            include: {
+                mixtures: true,
+                resources: true,
+                parent: true,
+                variants: true,
+            },
         });
+
+        return recipe;
     }
 
     async findAll(
@@ -96,6 +251,38 @@ export class RecipeService {
             where,
             orderBy,
             cursor,
+            include: {
+                resources: { include: { rawMaterial: true } },
+                parent: true,
+                variants: true,
+            },
+        });
+    }
+
+    async findAllVariants(
+        params: IPagination & {
+            cursor?: Prisma.RecipeWhereUniqueInput;
+            where?: Prisma.RecipeWhereInput;
+            orderBy?: Prisma.RecipeOrderByWithAggregationInput;
+            recipeId: number;
+        }
+    ): Promise<RecipeDto[]> {
+        const { page, limit, cursor, orderBy, recipeId } = params;
+
+        return this.prisma.recipe.findMany({
+            take: limit,
+            skip: limit! * (page! - 1),
+            where: {
+                parentId: recipeId,
+            },
+            orderBy,
+            cursor,
+            include: {
+                mixtures: true,
+                resources: true,
+                parent: true,
+                variants: true,
+            },
         });
     }
 
@@ -103,13 +290,30 @@ export class RecipeService {
         id: number,
         data: Prisma.RecipeUpdateInput
     ): Promise<RecipeDto> {
-        if (!this.exists({ id })) {
-            throw new HttpError(409, 'Recipe already exists');
+        if (!(await this.exists({ id }))) {
+            throw new HttpError(409, 'Recipe does not exists');
         }
 
         return this.prisma.recipe.update({
             data,
             where: { id },
+        });
+    }
+
+    async updateVariant(
+        id: number,
+        parentId: number,
+        data: Prisma.RecipeUpdateInput
+    ): Promise<RecipeDto> {
+        await this.prisma.recipe
+            .findUniqueOrThrow({ where: { id, parentId } })
+            .catch(() => {
+                throw new HttpError(404, `Recipe does not exists`);
+            });
+
+        return this.prisma.recipe.update({
+            data,
+            where: { id, parentId },
         });
     }
 

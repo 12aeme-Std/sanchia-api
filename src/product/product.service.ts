@@ -6,6 +6,10 @@ import { CategoryService } from '@category/category.service';
 import { CreateProductDto } from './dtos/create-product.dto';
 // import { CategoryDto } from '@category/dtos/category.dto';
 
+// TODO: Search product by category
+// TODO: Update dimentions
+// TODO: Make product dimentions optional
+
 export class ProductService {
     private readonly prisma: PrismaClient;
     private readonly categoryService: CategoryService;
@@ -34,15 +38,28 @@ export class ProductService {
                         name: data.category,
                     },
                 },
+                productDimentions: {
+                    create: {
+                        weight: data.productDimentions.weight,
+                        length: data.productDimentions.length,
+                        height: data.productDimentions.height,
+                        width: data.productDimentions.width,
+                    },
+                },
             },
         });
     }
 
     // TODO: If img and category are requiretments, include them in query
     async findOne(where: Prisma.ProductWhereUniqueInput): Promise<ProductDto> {
-        return this.prisma.product.findUniqueOrThrow({ where }).catch(() => {
-            throw new HttpError(404, 'Product not found');
-        });
+        return this.prisma.product
+            .findUniqueOrThrow({
+                where,
+                include: { category: true, productDimentions: true },
+            })
+            .catch(() => {
+                throw new HttpError(404, 'Product not found');
+            });
     }
 
     // TODO: If img and category are requiretments, include them in query
@@ -58,11 +75,12 @@ export class ProductService {
         // TODO: Include all the category and not just the id
 
         return this.prisma.product.findMany({
-            skip: page! - 1,
+            skip: limit! * (page! - 1),
             take: limit,
             cursor,
             where,
             orderBy,
+            include: { category: true, productDimentions: true },
         });
     }
 
@@ -76,6 +94,17 @@ export class ProductService {
         // TODO: Add method to verify that the new name does not exists
 
         return this.prisma.product.update({ data, where: { id } });
+    }
+
+    async isAvailable(id: number, amount: number): Promise<boolean> {
+        const product = await this.prisma.product.findFirstOrThrow({
+            where: { id },
+            select: {
+                stock: true,
+            },
+        });
+
+        return product.stock >= amount;
     }
 
     async delete(id: number): Promise<void> {

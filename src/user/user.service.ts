@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient, Roles } from '@prisma/client';
 import { UserDto } from './dtos/user.dto';
 import * as bcrypt from 'bcrypt';
 import { HttpError } from '@common/http-error';
@@ -27,14 +27,38 @@ export class UserService {
             data: {
                 ...data,
                 password: hashedPwd,
+                cart:
+                    !data.role || data.role === Roles.CLIENT
+                        ? {
+                              create: {},
+                          }
+                        : undefined,
+            },
+            select: {
+                id: true,
+                name: true,
+                lastname: true,
+                email: true,
+                role: true,
             },
         });
     }
 
     async findOne(where: Prisma.UserWhereUniqueInput): Promise<UserDto | null> {
-        return this.prisma.user.findUniqueOrThrow({ where }).catch(() => {
-            throw new HttpError(404, 'User not found');
-        });
+        return this.prisma.user
+            .findUniqueOrThrow({
+                where,
+                select: {
+                    id: true,
+                    name: true,
+                    lastname: true,
+                    email: true,
+                    role: true,
+                },
+            })
+            .catch(() => {
+                throw new HttpError(404, 'User not found');
+            });
     }
 
     async findAll(
@@ -47,7 +71,7 @@ export class UserService {
         const { page, limit, cursor, where, orderBy } = params;
 
         return this.prisma.user.findMany({
-            skip: page! - 1,
+            skip: limit! * (page! - 1),
             take: limit,
             cursor,
             where,

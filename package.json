@@ -5,7 +5,7 @@
     "main": "server.ts",
     "scripts": {
         "test": "jest",
-        "build": "tsc && resolve-tspaths",
+        "build": "npx prisma generate && tsc && resolve-tspaths",
         "start": "node dist/server.js",
         "debug": "DEBUG=express:* nodemon -e ts,js --exec ts-node -r tsconfig-paths/register ./src/server.ts",
         "dev": "nodemon -e ts,js --exec ts-node -r tsconfig-paths/register ./src/server.ts",
@@ -19,7 +19,10 @@
     "devDependencies": {
         "@types/cors": "^2.8.13",
         "@types/jest": "^29.5.6",
+        "@types/mssql": "^9.1.2",
         "@types/passport-jwt": "^3.0.9",
+        "@types/shortid": "^0.0.30",
+        "@types/uuid": "^9.0.4",
         "@typescript-eslint/eslint-plugin": "^5.62.0",
         "@typescript-eslint/parser": "^5.59.7",
         "eslint": "^8.44.0",
@@ -48,6 +51,7 @@
         "@types/bcrypt": "^5.0.0",
         "@types/express": "^4.17.17",
         "@types/jsonwebtoken": "^9.0.2",
+        "@types/lodash": "^4.14.200",
         "@types/multer": "^1.4.7",
         "accesscontrol": "^2.2.1",
         "bcrypt": "^5.1.0",
@@ -59,10 +63,15 @@
         "express-async-errors": "^3.1.1",
         "joi": "^17.9.2",
         "jsonwebtoken": "^9.0.1",
+        "lodash": "^4.17.21",
         "morgan": "^1.10.0",
+        "mssql": "^10.0.1",
         "multer": "^1.4.5-lts.1",
+        "node-cron": "^3.0.2",
         "passport-jwt": "^4.0.1",
         "resolve-tspaths": "^0.8.14",
-        "tspath": "^2.6.8"
+        "shortid": "^2.2.16",
+        "tspath": "^2.6.8",
+        "uuid": "^9.0.1"
     }
 }

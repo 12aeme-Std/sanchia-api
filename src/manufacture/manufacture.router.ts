@@ -9,7 +9,13 @@ router.use(passport.authenticate('jwt', { session: false }));
 
 router.post(
     '/result',
-    manufactureController.createResult.bind(manufactureController)
+    manufactureController.finishManufactureProcess.bind(manufactureController)
+);
+router.get(
+    '/products',
+    manufactureController.getManufactureProductsWithRecipe.bind(
+        manufactureController
+    )
 );
 router.post('/', manufactureController.create.bind(manufactureController));
 
