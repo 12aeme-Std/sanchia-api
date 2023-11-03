@@ -13,7 +13,7 @@ export class RecipeController {
 
     async findByManufactureProduct(req: Request, res: Response) {
         return res.send(
-           await this.recipeService.findByMProduct(Number(req.params.mpId))
+            await this.recipeService.findByMProduct(Number(req.params.mpId))
         );
     }
 
