@@ -4,6 +4,7 @@ import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { CategoryService } from '@category/category.service';
 import { CreateProductDto } from './dtos/create-product.dto';
+import { Request } from 'express';
 // import { CategoryDto } from '@category/dtos/category.dto';
 
 // TODO: Search product by category
@@ -20,7 +21,10 @@ export class ProductService {
     }
 
     // TODO: Product img
-    async createProdut(data: CreateProductDto): Promise<ProductDto> {
+    async createProdut(req: Request): Promise<ProductDto> {
+        const data = req.body as CreateProductDto;
+        const { files } = req;
+
         if (!(await this.categoryService.findOne({ name: data.category }))) {
             throw new HttpError(400, 'Invalid category');
         }
@@ -30,24 +34,36 @@ export class ProductService {
         )
             throw new HttpError(409, 'Product already exists');
 
-        return this.prisma.product.create({
-            data: {
-                ...data,
-                category: {
-                    connect: {
-                        name: data.category,
-                    },
-                },
-                productDimentions: {
-                    create: {
-                        weight: data.productDimentions.weight,
-                        length: data.productDimentions.length,
-                        height: data.productDimentions.height,
-                        width: data.productDimentions.width,
-                    },
-                },
-            },
-        });
+        if (!files || !Array.isArray(files)) {
+            throw new HttpError(400, 'No images provided');
+        }
+
+        console.log(files);
+        // const images = files.map((file: Express.Multer.File) => {
+        //     return { url: file.path };
+        // });
+
+        // return this.prisma.product.create({
+        //     data: {
+        //         ...data,
+        //         category: {
+        //             connect: {
+        //                 name: data.category,
+        //             },
+        //         },
+        //         // productImages: {
+        //         //     create: images,
+        //         // },
+        //         productDimentions: {
+        //             create: {
+        //                 weight: data.productDimentions.weight,
+        //                 length: data.productDimentions.length,
+        //                 height: data.productDimentions.height,
+        //                 width: data.productDimentions.width,
+        //             },
+        //         },
+        //     },
+        // });
     }
 
     // TODO: If img and category are requiretments, include them in query

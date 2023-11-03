@@ -11,7 +11,7 @@ export class ProductController {
     async create(req: Request, res: Response) {
         return res
             .status(200)
-            .json(await this.productService.createProdut(req.body));
+            .json(await this.productService.createProdut(req));
     }
 
     async findOne(req: Request, res: Response) {
