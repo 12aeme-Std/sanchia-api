@@ -4,6 +4,7 @@ import { HttpError } from '@common/http-error';
 import { IPagination } from '@common/interfaces/pagination.interface';
 import { CategoryService } from '@category/category.service';
 import { CreateProductDto } from './dtos/create-product.dto';
+import Spaces from 'do-spaces';
 import { Request } from 'express';
 // import { CategoryDto } from '@category/dtos/category.dto';
 
@@ -21,9 +22,25 @@ export class ProductService {
     }
 
     // TODO: Product img
-    async createProdut(req: Request): Promise<ProductDto> {
-        const data = req.body as CreateProductDto;
-        const { files } = req;
+    async createProduct(
+        data: CreateProductDto,
+        req: Request
+    ): Promise<ProductDto> {
+        const spaces = new Spaces({
+            endpoint: process.env.S3_ENDPOINT as string,
+            accessKey: process.env.AWS_ACCESS_KEY_ID as string,
+            secret: process.env.AWS_SECRET_ACCESS_KEY as string,
+            bucket: process.env.BUCKET_NAME as string,
+        });
+        const filename = req.headers['content-disposition']?.split('=')[1];
+        const file = String(filename);
+
+        await spaces.uploadFile({
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            pathname: `/images/products/${filename}`,
+            privacy: 'public-read',
+            file,
+        });
 
         if (!(await this.categoryService.findOne({ name: data.category }))) {
             throw new HttpError(400, 'Invalid category');
@@ -34,36 +51,7 @@ export class ProductService {
         )
             throw new HttpError(409, 'Product already exists');
 
-        if (!files || !Array.isArray(files)) {
-            throw new HttpError(400, 'No images provided');
-        }
-
-        console.log(files);
-        // const images = files.map((file: Express.Multer.File) => {
-        //     return { url: file.path };
-        // });
-
-        // return this.prisma.product.create({
-        //     data: {
-        //         ...data,
-        //         category: {
-        //             connect: {
-        //                 name: data.category,
-        //             },
-        //         },
-        //         // productImages: {
-        //         //     create: images,
-        //         // },
-        //         productDimentions: {
-        //             create: {
-        //                 weight: data.productDimentions.weight,
-        //                 length: data.productDimentions.length,
-        //                 height: data.productDimentions.height,
-        //                 width: data.productDimentions.width,
-        //             },
-        //         },
-        //     },
-        // });
+        return this.prisma.product.create({ data });
     }
 
     // TODO: If img and category are requiretments, include them in query
