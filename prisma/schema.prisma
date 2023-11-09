@@ -21,7 +21,7 @@ model User {
   updatedAt DateTime @updatedAt() @map("updated_at")
 
   cart Cart?
-  
+
   orders             Order[]
   preOrders          PreOrder[]
   warehouseMovements WarehouseMovement[]
@@ -35,8 +35,8 @@ model Product {
   description String
   price       Float
   stock       Int
-  isAvailable Boolean @default(true) @map("is_available")
-  isNew       Boolean @default(false) @map("is_new")
+  isAvailable Boolean  @default(true) @map("is_available")
+  isNew       Boolean  @default(false) @map("is_new")
   endurance   String
   color       String
   createdAt   DateTime @default(now()) @map("created_at")
@@ -59,16 +59,18 @@ model Product {
 model ProductDimentions {
   id Int @id @default(autoincrement())
 
-  length String?
-  width String?
-  height String?
-  weight String?
+  length     String?
+  width      String?
+  height     String?
+  weight     String?
+  resistence String?
 
-  product Product @relation(fields: [productId], references: [id])
-  productId Int @map("product_id") @unique
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int     @unique @map("product_id")
 
   @@map("product_dimentions")
 }
+
 model Image {
   id Int @id @default(autoincrement())
 
@@ -82,11 +84,23 @@ model Image {
   @@map("image")
 }
 
+model CategoryArea {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  category Category[]
+
+  @@map("category_area")
+}
+
 model Category {
   id   Int    @id @default(autoincrement())
   name String @unique
 
   products Product[]
+
+  categoryArea   CategoryArea @relation(fields: [categoryAreaId], references: [id])
+  categoryAreaId Int          @map("category_area_id")
 
   @@map("category")
 }
@@ -96,22 +110,22 @@ model Cart {
 
   productsCarts ProductsCarts[]
 
-  user User @relation(fields: [userId], references: [id])
-  userId Int @unique @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @unique @map("user_id")
 
   @@map("cart")
 }
 
 model Order {
-  id Int  @id @default(autoincrement())
-  orderTracker    String  @default(uuid())
-  total Float @default(0)
-  store String
+  id           Int    @id @default(autoincrement())
+  orderTracker String @default(uuid())
+  total        Float  @default(0)
+  store        String
 
   orderedAt DateTime @default(now()) @map("ordered_at")
 
   user   User @relation(fields: [userId], references: [id])
-  userId Int   @map("user_id")
+  userId Int  @map("user_id")
 
   status OrderStatus
 
