@@ -5,9 +5,11 @@ import {
     PrismaClient,
     ProductionSpec,
     RawMaterial,
+    Recipe,
     ResourceOnRecipe,
+    Prisma,
 } from '@prisma/client';
-import sql from 'mssql';
+import sql, { connect } from 'mssql';
 import { CreateRawMaterialDto } from '@raw-material/dtos/create-raw-material.dto';
 import _ from 'lodash';
 
@@ -180,12 +182,12 @@ export class PlanningController {
         const resourcesOnMachines: Array<{
             machine: ManufactureMachine;
             resources:
-                | Array<
-                      ResourceOnRecipe & {
-                          rawMaterial: RawMaterial | null;
-                      }
-                  >
-                | undefined;
+            | Array<
+                ResourceOnRecipe & {
+                    rawMaterial: RawMaterial | null;
+                }
+            >
+            | undefined;
             production: ProductionSpec;
         }> = [];
 
@@ -283,7 +285,7 @@ export class PlanningController {
         });
     }
 
-    async syncData(req: Request, res: Response) {
+    async syncMaterials(req: Request, res: Response) {
         try {
             await sql.connect({
                 user: 'olimporeader',
@@ -303,34 +305,32 @@ export class PlanningController {
             });
 
             const result = await sql.query`
-                SELECT 
-                    MXP.mxprId,
-                    CP.cprNombre as [categoria],
-                    PR.proId as [prodId],
-                    PR.proCodigo AS [codigoProducto],
-                    PR.proNombre As [nombreProducto],
-                    MT.proId as [matId],
-                    MT.proCodigo AS [codigoMaterial],
-                    MT.proNombre AS [nombreMaterial],
-                    PR.cprId as [idCategorias],
-                    MXP.*
-                FROM 
-                    olComun.dbo.MaterialesXProducto MXP
-                LEFT JOIN olComun.dbo.Productos PR WITH (NOLOCK) on MXP.proId = PR.proId
-                LEFT JOIN olComun.dbo.Productos MT WITH (NOLOCK) on MXP.proIdMaterial  = MT.proId
-                LEFT JOIN olComun.dbo.CategoriasProductos CP WITH (NOLOCK) on CP.cprId = MT.cprId
-                where MT.cprId = 2644; 
+            SELECT 
+                CP.cprNombre as [categoria],
+                PR.proCodigo AS [codigoProducto],
+                PR.proNombre As [nombreProducto],
+                MT.proCodigo AS [codigoMaterial],
+                MT.proNombre AS [nombreMaterial],
+                PR.cprId as [idCategorias],
+                MXP.*
+            FROM 
+                olComun.dbo.MaterialesXProducto MXP
+            LEFT JOIN olComun.dbo.Productos PR WITH (NOLOCK) on MXP.proId = PR.proId
+            LEFT JOIN olComun.dbo.Productos MT WITH (NOLOCK) on MXP.proIdMaterial  = MT.proId
+            LEFT JOIN olComun.dbo.CategoriasProductos CP WITH (NOLOCK) on CP.cprId = MT.cprId
+            WHERE MT.cprId in (2647, 2645, 2595, 2644, 2648);
             `;
+            const dataFromOlimpo = result.recordset;
             const creationData: any[] = [];
-            result.recordset.forEach((product: any) => {
+            dataFromOlimpo.forEach((product: any) => {
                 // Condicion para si existe
                 const dataIndex = creationData.findIndex(
-                    (data) => data.olimId === product.matId
+                    (data) => data.code === product.codigoMaterial
                 );
 
                 if (dataIndex < 0) {
                     creationData.push({
-                        olimId: product.matId,
+                        olimId: product.proIdMaterial,
                         code: product.codigoMaterial,
                         name: product.nombreMaterial,
                         category: product.categoria,
@@ -343,7 +343,213 @@ export class PlanningController {
                 data: creationData,
             });
 
-            res.send(createMaterials);
+            res.send({ createMaterials });
+        } catch (error) {
+            res.send(error);
+        }
+    }
+
+    async syncProducts(req: Request, res: Response) {
+        try {
+            await sql.connect({
+                user: 'olimporeader',
+                password: 'olimporeader',
+                database: 'master',
+                server: 'sanchia.bitconsultores.net',
+                port: 2034,
+                pool: {
+                    max: 10,
+                    min: 0,
+                    idleTimeoutMillis: 30000,
+                },
+                options: {
+                    encrypt: false,
+                    trustServerCertificate: false,
+                },
+            });
+
+            const result = await sql.query`
+            SELECT 
+                CP.cprNombre as [categoria],
+                PR.proCodigo AS [codigoProducto],
+                PR.proNombre As [nombreProducto],
+                MT.proCodigo AS [codigoMaterial],
+                MT.proNombre AS [nombreMaterial],
+                PR.cprId as [idCategorias],
+                MXP.*
+            FROM 
+                olComun.dbo.MaterialesXProducto MXP
+            LEFT JOIN olComun.dbo.Productos PR WITH (NOLOCK) on MXP.proId = PR.proId
+            LEFT JOIN olComun.dbo.Productos MT WITH (NOLOCK) on MXP.proIdMaterial  = MT.proId
+            LEFT JOIN olComun.dbo.CategoriasProductos CP WITH (NOLOCK) on CP.cprId = MT.cprId
+            WHERE MT.cprId in (2647, 2645, 2595, 2644, 2648);
+            `;
+            const dataFromOlimpo = result.recordset;
+            const creationData: any[] = [];
+            dataFromOlimpo.forEach((product: any) => {
+                // Condicion para si existe
+                const dataIndex = creationData.findIndex(
+                    (data) => data.code === product.codigoProducto
+                );
+
+                if (dataIndex < 0) {
+                    creationData.push({
+                        olimId: product.proId,
+                        code: product.codigoProducto,
+                        name: product.nombreProducto
+                    });
+                }
+            });
+            const createProducts =
+                await this.prisma.manufactureProduct.createMany({
+                    data: creationData,
+                });
+
+            res.send(createProducts);
+        } catch (error) {
+            res.send(error);
+        }
+    }
+
+    async syncRecipes(req: Request, res: Response) {
+        try {
+            await sql.connect({
+                user: 'olimporeader',
+                password: 'olimporeader',
+                database: 'master',
+                server: 'sanchia.bitconsultores.net',
+                port: 2034,
+                pool: {
+                    max: 10,
+                    min: 0,
+                    idleTimeoutMillis: 30000,
+                },
+                options: {
+                    encrypt: false,
+                    trustServerCertificate: false,
+                },
+            });
+
+            const result = await sql.query`
+            SELECT 
+                CP.cprNombre as [categoria],
+                PR.proCodigo AS [codigoProducto],
+                PR.proNombre As [nombreProducto],
+                MT.proCodigo AS [codigoMaterial],
+                MT.proNombre AS [nombreMaterial],
+                PR.cprId as [idCategorias],
+                MXP.*
+            FROM 
+                olComun.dbo.MaterialesXProducto MXP
+            LEFT JOIN olComun.dbo.Productos PR WITH (NOLOCK) on MXP.proId = PR.proId
+            LEFT JOIN olComun.dbo.Productos MT WITH (NOLOCK) on MXP.proIdMaterial  = MT.proId
+            LEFT JOIN olComun.dbo.CategoriasProductos CP WITH (NOLOCK) on CP.cprId = MT.cprId
+            WHERE MT.cprId in (2647, 2645, 2595, 2644, 2648);
+            `;
+            const dataFromOlimpo = result.recordset;
+            const creationData: any[] = [];
+            dataFromOlimpo.forEach((product: any) => {
+                // Condicion para si existe
+                const dataIndex = creationData.findIndex(
+                    (data) => data.code === product.codigoProducto
+                );
+
+                if (dataIndex < 0) {
+                    creationData.push({
+                        code: product.codigoProducto,
+                        name: `${String(product?.nombreProducto)} | Default`,
+                        description: `Recipe for product: ${String(
+                            product?.nombreProducto
+                        )}`,
+                        resources: dataFromOlimpo.filter(
+                            (mat) =>
+                                mat.nombreProducto === product.nombreProducto
+                        ),
+                    });
+                }
+            });
+
+            const recipes = await Promise.all(
+                creationData.map(async (rawRecipe) => {
+                    const materialsIds = rawRecipe.resources.map(
+                        (mat: any) => mat.codigoMaterial
+                    );
+                    const materials = await this.prisma.rawMaterial.findMany({
+                        where: { code: { in: materialsIds } },
+                    });
+
+                    const recipeResources: Prisma.ResourceOnRecipeCreateManyRecipeInputEnvelope = {
+                        data: materials.map((mat) => {
+                            const quantity = rawRecipe.resources.find(
+                                (rawMat: any) =>
+                                    mat.code === rawMat.codigoMaterial
+                            ).mxprCantidad;
+
+
+                            return {
+                                rawMaterialId: Number(mat.id),
+                                requiredMaterial: quantity
+                            };
+                        })
+                    };
+                    const manuProduct =
+                        await this.prisma.manufactureProduct.findFirst({
+                            where: { code: rawRecipe.code },
+                        });
+                    const finalRecipe: Prisma.RecipeCreateInput = {
+                        name: rawRecipe.name,
+                        description: rawRecipe.description,
+                        quantity: 1,
+                        manufactureProduct: {
+                            connect: { id: manuProduct?.id },
+                        },
+                        resources: { createMany: recipeResources },
+                    };
+                    return finalRecipe;
+                })
+            );
+
+            // const createRecipes = await this.prisma.recipe.createMany({
+            //     data: recipes,
+            // });
+
+            const incompletedPromises = recipes.map((recipe) => {
+                return this.prisma.recipe.create({ data: recipe });
+            });
+            const resolvedPromises = await Promise.all(incompletedPromises);
+            // const singleRecipe = await this.prisma.recipe.create({
+            //     data: {
+            //         name: "Silla Eterna Café - - | Default",
+            //         description: "Recipe for product: Silla Eterna Café - -",
+            //         quantity: 1,
+            //         manufactureProduct: {
+            //             connect: {
+            //                 id: 6,
+            //             },
+            //         },
+            //         resources: {
+            //             createMany: {
+            //                 data: [
+            //                     {
+
+            //                         rawMaterialId: 59,
+            //                         requiredMaterial: 2.699,
+            //                     },
+            //                     {
+            //                         rawMaterialId: 60,
+            //                         requiredMaterial: 0.0675,
+            //                     },
+            //                     {
+            //                         rawMaterialId: 61,
+            //                         requiredMaterial: 0.0135,
+            //                     },
+            //                 ],
+            //             },
+            //         },
+            //     }
+            // })
+
+            res.send(resolvedPromises);
         } catch (error) {
             res.send(error);
         }

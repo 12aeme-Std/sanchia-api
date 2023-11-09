@@ -6,7 +6,19 @@ const router = Router();
 const planningController = new PlanningController();
 
 // router.use(passport.authenticate('jwt', { session: false }));
-router.get('/sync', planningController.syncData.bind(planningController));
+router.get(
+    '/sync-materials',
+    planningController.syncMaterials.bind(planningController)
+);
+router.get(
+    '/sync-products',
+    planningController.syncProducts.bind(planningController)
+);
+
+router.get(
+    '/sync-recipes',
+    planningController.syncRecipes.bind(planningController)
+);
 
 router.get('/', planningController.getPlans.bind(planningController));
 router.get('/:id', planningController.getSinglePlan.bind(planningController));
