@@ -648,6 +648,7 @@ export class PlanningController {
             const { recordset: dataFromOlimpo } = result;
             const updateData: any[] = [];
             dataFromOlimpo.forEach((product: any) => {
+                console.log(product.stock)
                 updateData.push(
                     this.prisma.rawMaterial.update({
                         where: { olimId: product.proId },
