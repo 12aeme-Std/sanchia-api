@@ -16,6 +16,11 @@ router.get(
 );
 
 router.get(
+    '/sync-stocks',
+    planningController.syncStocks.bind(planningController)
+);
+
+router.get(
     '/sync-recipes',
     planningController.syncRecipes.bind(planningController)
 );
