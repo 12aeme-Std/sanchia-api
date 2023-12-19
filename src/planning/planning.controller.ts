@@ -648,7 +648,7 @@ export class PlanningController {
             const { recordset: dataFromOlimpo } = result;
             const updateData: any[] = [];
             dataFromOlimpo.forEach((product: any) => {
-                console.log(product.stock)
+                console.log(product.stock);
                 updateData.push(
                     this.prisma.rawMaterial.update({
                         where: { olimId: product.proId },
@@ -656,7 +656,7 @@ export class PlanningController {
                     })
                 );
             });
-            const insertedData = await Promise.all(dataFromOlimpo);
+            const insertedData = await Promise.all(updateData);
             res.send(insertedData);
         } catch (error) {
             res.send({ error });
