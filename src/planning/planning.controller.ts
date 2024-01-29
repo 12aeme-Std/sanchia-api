@@ -201,12 +201,12 @@ export class PlanningController {
         const resourcesOnMachines: Array<{
             machine: ManufactureMachine;
             resources:
-                | Array<
-                      ResourceOnRecipe & {
-                          rawMaterial: RawMaterial | null;
-                      }
-                  >
-                | undefined;
+            | Array<
+                ResourceOnRecipe & {
+                    rawMaterial: RawMaterial | null;
+                }
+            >
+            | undefined;
             production: ProductionSpec;
         }> = [];
 
@@ -498,19 +498,19 @@ export class PlanningController {
                     });
 
                     const recipeResources: Prisma.ResourceOnRecipeCreateManyRecipeInputEnvelope =
-                        {
-                            data: materials.map((mat) => {
-                                const quantity = rawRecipe.resources.find(
-                                    (rawMat: any) =>
-                                        mat.code === rawMat.codigoMaterial
-                                ).mxprCantidad;
+                    {
+                        data: materials.map((mat) => {
+                            const quantity = rawRecipe.resources.find(
+                                (rawMat: any) =>
+                                    mat.code === rawMat.codigoMaterial
+                            ).mxprCantidad;
 
-                                return {
-                                    rawMaterialId: Number(mat.id),
-                                    requiredMaterial: quantity,
-                                };
-                            }),
-                        };
+                            return {
+                                rawMaterialId: Number(mat.id),
+                                requiredMaterial: quantity,
+                            };
+                        }),
+                    };
                     const manuProduct =
                         await this.prisma.manufactureProduct.findFirst({
                             where: { code: rawRecipe.code },
@@ -571,6 +571,116 @@ export class PlanningController {
             res.send(resolvedPromises);
         } catch (error) {
             res.send(error);
+        }
+    }
+
+    async syncStocks(req: Request, res: Response) {
+        try {
+            await sql.connect({
+                user: 'olimporeader',
+                password: 'olimporeader',
+                database: 'master',
+                server: 'sanchia.bitconsultores.net',
+                port: 2034,
+                pool: {
+                    max: 10,
+                    min: 0,
+                    idleTimeoutMillis: 30000,
+                },
+                options: {
+                    encrypt: false,
+                    trustServerCertificate: false,
+                },
+            });
+
+            const result = await sql.query`
+            SELECT PR.proId 
+                , PR.proCodigo AS [codProducto] 
+                , PR.proNombre AS [name] 
+                , SUM(ISNULL(SA.sliSaldo, 0)) AS [saldo] 
+                , ISNULL(NULLIF(SUM(ISNULL(SA.sliSaldoReservado, 0)), 0), ISNULL(VTA.SumaSalidasVenSinPost, 0)) AS [reservado]
+                , SUM(ISNULL(SA.sliSaldo, 0)) - ISNULL(NULLIF(SUM(ISNULL(SA.sliSaldoReservado, 0)), 0), ISNULL(VTA.SumaSalidasVenSinPost, 0)) AS [stock]
+            FROM olComun.dbo.Productos PR WITH (NOLOCK)
+                LEFT JOIN olInventario.dbo.Saldos SA WITH (NOLOCK) ON SA.proId = PR.proId 
+                LEFT JOIN olComun.dbo.Marcas MAR WITH (NOLOCK) ON PR.marId = MAR.marId 
+                LEFT JOIN (
+                            SELECT COM.proId, PRV.prvId  
+                                , PRV.prvNombre + ISNULL(' [NRC: ' + NULLIF(RTRIM(PRV.prvRegistroIva), '') + ']', ISNULL(' [NIT: ' + NULLIF(RTRIM(PRV.prvNIT), '') + ']', ' [Cod.: ' + PRV.prvCodigo + ']')) AS prvInfo
+                            FROM (
+                                    SELECT MMO.prvId 
+                                        , DMO.proId 
+                                        , MAX(MMO.mmoFecha) AS UltFecCompra
+                                        , ROW_NUMBER() OVER (PARTITION BY DMO.proId ORDER BY MMO.mmoFecHoraPosteado DESC) AS RowNum
+                                    FROM olInventario.dbo.maeMovi MMO WITH (NOLOCK)
+                                        INNER JOIN olInventario.dbo.detMovi DMO WITH (NOLOCK) ON MMO.mmoId = DMO.mmoId 
+                                        INNER JOIN olInventario.dbo.TiposMovi TMO WITH (NOLOCK) ON MMO.tmoId = TMO.tmoId AND TMO.tmoCodigo = 'COM' 
+                                    WHERE MMO.mmoPosteado = 1 
+                                    AND MMO.mmoAnulado = 0 
+                                    AND MMO.prvId IS NOT NULL 
+                                    GROUP BY MMO.prvId 
+                                        , DMO.proId
+                                        , MMO.mmoFecHoraPosteado
+                                ) COM 
+                                    INNER JOIN olComun.dbo.Proveedores PRV WITH (NOLOCK) ON COM.prvId = PRV.prvId AND PRV.prvId <> -100
+                            WHERE COM.RowNum = 1
+                        ) PRV ON PRV.proId = PR.proId 
+                LEFT JOIN (
+                            SELECT DMO.proId
+                                , DMO.mloId
+                                , DMO.ubiId
+                                , SUM(DMO.dmoCantidad) AS SumaSalidasVenSinPost
+                            FROM olInventario.dbo.detMovi DMO WITH (NOLOCK)
+                                INNER JOIN olInventario.dbo.maeMovi MMO WITH (NOLOCK) ON DMO.mmoId = MMO.mmoId AND MMO.mmoPosteado = 0 AND MMO.mmoAnulado = 0
+                                INNER JOIN olInventario.dbo.TiposMovi TMO WITH (NOLOCK) ON MMO.tmoId = TMO.tmoId AND TMO.tmoCodigo = 'VEN'
+                            GROUP BY DMO.proId
+                                , DMO.mloId
+                                , DMO.ubiId
+                        ) VTA ON VTA.proId = SA.proId AND ISNULL(VTA.mloId, -1) = ISNULL(SA.mloId, -1) AND ISNULL(VTA.ubiId,olInventario.dbo.GetDefaultUBI()) = SA.ubiId
+                LEFT JOIN (
+                            SELECT proId
+                                , prvInfo
+                                , prvId
+                            FROM (
+                                    SELECT PX.proId, PX.prvId
+                                        , PRV.prvNombre + ISNULL(' [NRC: ' + NULLIF(RTRIM(PRV.prvRegistroIva), '') + ']', ISNULL(' [NIT: ' + NULLIF(RTRIM(PRV.prvNIT), '') + ']', ' [Cod.: ' + PRV.prvCodigo + ']')) AS prvInfo
+                                        , PX.pxpDefault
+                                        , ROW_NUMBER() OVER (PARTITION BY PX.proId ORDER BY PX.pxpDefault) AS PXPRowNum
+                                    FROM olComun.dbo.ProductosXProveedor PX WITH (NOLOCK)
+                                        INNER JOIN olComun.dbo.Proveedores PRV WITH (NOLOCK) ON PRV.prvId = PX.prvId 
+                                ) PXPR
+                            WHERE PXPR.PXPRowNum = 1
+                        ) PXP ON PXP.proId = PR.proId
+            WHERE PR.proTipo = 0 AND PR.cprId in (2647, 2645, 2595, 2644, 2648)
+            GROUP BY PR.proCodigo 
+                , PR.proId 
+                , SA.mloId 
+                , SA.ubiId 
+                , PR.proCosto 
+                , PR.cprId 
+                , MAR.marNombre 
+                , PRV.prvId  
+                , ISNULL(VTA.SumaSalidasVenSinPost, 0)
+                , PXP.prvId 
+                , PR.proNombre
+            ORDER BY PR.proNombre;`;
+
+            const { recordset: dataFromOlimpo } = result;
+            const updateData: any[] = [];
+            dataFromOlimpo.forEach((product: any) => {
+                console.log({ id: product.proId, stock: product.stock });
+                if (product.proId) {
+                    updateData.push(
+                        this.prisma.rawMaterial.update({
+                            where: { olimId: product.proId },
+                            data: { stock: product.stock },
+                        })
+                    );
+                }
+            });
+            const insertedData = await Promise.all(updateData);
+            res.send(insertedData);
+        } catch (error) {
+            res.send({ error });
         }
     }
 }
