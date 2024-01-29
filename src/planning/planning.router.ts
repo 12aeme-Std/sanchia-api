@@ -65,6 +65,14 @@ router.post(
     '/:id/specs/productions',
     planningController.createProductionSpec.bind(planningController)
 );
+router.put(
+    '/:id/specs/productions',
+    planningController.updateProductionSpec.bind(planningController)
+);
+router.delete(
+    '/:id/specs/productions',
+    planningController.deleteProductionSpec.bind(planningController)
+);
 
 router.get(
     '/:id/specs/:iden/productions',
