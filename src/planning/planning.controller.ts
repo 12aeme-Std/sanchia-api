@@ -114,19 +114,20 @@ export class PlanningController {
     }
 
     async updateProductionSpec(req: Request, res: Response) {
-        const { id } = req.body;
+        const { pid } = req.params;
         delete req.body.id;
         const productionSpec = await this.prisma.productionSpec.update({
             data: req.body,
-            where: { id },
+            where: { id: Number(pid) },
         });
 
         return res.send(productionSpec);
     }
 
     async deleteProductionSpec(req: Request, res: Response) {
+        const { pid } = req.params;
         const productionSpec = await this.prisma.productionSpec.delete({
-            where: { id: req.body.id },
+            where: { id: Number(pid) },
         });
 
         return res.send(productionSpec);

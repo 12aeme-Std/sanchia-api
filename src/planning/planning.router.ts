@@ -71,11 +71,11 @@ router.post(
     planningController.createProductionSpec.bind(planningController)
 );
 router.put(
-    '/:id/specs/productions',
+    '/:id/specs/productions/:pid',
     planningController.updateProductionSpec.bind(planningController)
 );
 router.delete(
-    '/:id/specs/productions',
+    '/:id/specs/productions/:pid',
     planningController.deleteProductionSpec.bind(planningController)
 );
 
