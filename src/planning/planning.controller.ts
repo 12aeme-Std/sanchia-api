@@ -60,12 +60,18 @@ export class PlanningController {
                 PlanningSchedule: {
                     include: {
                         ProductionSpec: {
-                            include: { manufactureProduct: true, recipe: true },
+                            include: {
+                                manufactureProduct: true,
+                                recipe: { include: { resources: true } },
+                            },
                         },
                     },
                 },
                 ProductionSpec: {
-                    include: { manufactureProduct: true, recipe: true },
+                    include: {
+                        manufactureProduct: true,
+                        recipe: { include: { resources: true } },
+                    },
                 },
             },
         });
