@@ -552,7 +552,7 @@ export class PlanningController {
             //     data: recipes,
             // });
 
-            const incompletedPromises = recipes.map((recipe) => {
+            const incompletedPromises = recipes.map(async (recipe) => {
                 return this.prisma.recipe.create({ data: recipe });
             });
             const resolvedPromises = await Promise.all(incompletedPromises);
