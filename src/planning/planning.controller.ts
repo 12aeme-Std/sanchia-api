@@ -57,8 +57,16 @@ export class PlanningController {
             where: { planningId: Number(req.params.id) },
             include: {
                 manufactureMachine: true,
-                PlanningSchedule: { include: { ProductionSpec: true } },
-                ProductionSpec: true,
+                PlanningSchedule: {
+                    include: {
+                        ProductionSpec: {
+                            include: { manufactureProduct: true, recipe: true },
+                        },
+                    },
+                },
+                ProductionSpec: {
+                    include: { manufactureProduct: true, recipe: true },
+                },
             },
         });
         return res.send(planningSpecs);
