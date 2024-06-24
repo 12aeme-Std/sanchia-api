@@ -367,7 +367,7 @@ model Recipe {
 
   type RecipeType @default(FINAL_PRODUCT)
 
-  ProductionSpec      ProductionSpec[]
+  ProductionSpec ProductionSpec[]
 
   @@map("recipe")
 }
