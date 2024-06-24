@@ -28,7 +28,8 @@ export class PlanningController {
     }
 
     async getPlans(req: Request, res: Response) {
-        const plans = await this.prisma.planning.findMany();
+        // const plans = await this.prisma.planning.findMany();
+        const plans = await this.prisma.planning.findMany({});
         return res.send(plans);
     }
 
@@ -54,7 +55,11 @@ export class PlanningController {
     async getPlanningSpecsByPlan(req: Request, res: Response) {
         const planningSpecs = await this.prisma.planningSpec.findMany({
             where: { planningId: Number(req.params.id) },
-            include: { manufactureMachine: true, PlanningSchedule: true },
+            include: {
+                manufactureMachine: true,
+                PlanningSchedule: { include: { ProductionSpec: true } },
+                ProductionSpec: true,
+            },
         });
         return res.send(planningSpecs);
     }
@@ -202,12 +207,12 @@ export class PlanningController {
         const resourcesOnMachines: Array<{
             machine: ManufactureMachine;
             resources:
-            | Array<
-                ResourceOnRecipe & {
-                    rawMaterial: RawMaterial | null;
-                }
-            >
-            | undefined;
+                | Array<
+                      ResourceOnRecipe & {
+                          rawMaterial: RawMaterial | null;
+                      }
+                  >
+                | undefined;
             production: ProductionSpec;
         }> = [];
 
@@ -499,19 +504,19 @@ export class PlanningController {
                     });
 
                     const recipeResources: Prisma.ResourceOnRecipeCreateManyRecipeInputEnvelope =
-                    {
-                        data: materials.map((mat) => {
-                            const quantity = rawRecipe.resources.find(
-                                (rawMat: any) =>
-                                    mat.code === rawMat.codigoMaterial
-                            ).mxprCantidad;
+                        {
+                            data: materials.map((mat) => {
+                                const quantity = rawRecipe.resources.find(
+                                    (rawMat: any) =>
+                                        mat.code === rawMat.codigoMaterial
+                                ).mxprCantidad;
 
-                            return {
-                                rawMaterialId: Number(mat.id),
-                                requiredMaterial: quantity,
-                            };
-                        }),
-                    };
+                                return {
+                                    rawMaterialId: Number(mat.id),
+                                    requiredMaterial: quantity,
+                                };
+                            }),
+                        };
                     const manuProduct =
                         await this.prisma.manufactureProduct.findFirst({
                             where: { code: rawRecipe.code },
