@@ -703,4 +703,19 @@ export class PlanningController {
             res.send({ error });
         }
     }
+
+    async syncStrocksFromOlimpoApi(req: Request, res: Response) {
+        const { data } = req.body;
+        const updatePromises = Promise.all(
+            // eslint-disable-next-line @typescript-eslint/promise-function-async
+            data.map((rawMaterial: any): Promise<any> => {
+                return this.prisma.rawMaterial.updateMany({
+                    where: { code: rawMaterial?.Codigo },
+                    data: { stock: rawMaterial?.Saldo },
+                });
+            })
+        );
+
+        return updatePromises;
+    }
 }
