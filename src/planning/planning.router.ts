@@ -29,6 +29,11 @@ router.get('/', planningController.getPlans.bind(planningController));
 router.get('/:id', planningController.getSinglePlan.bind(planningController));
 router.post('/', planningController.create.bind(planningController));
 
+router.put(
+    '/sync-raw-materials',
+    planningController.syncStrocksFromOlimpoApi.bind(planningController)
+);
+
 router.get(
     '/:id/reports',
     planningController.getReportData.bind(planningController)
