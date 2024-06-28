@@ -706,7 +706,7 @@ export class PlanningController {
 
     async syncStrocksFromOlimpoApi(req: Request, res: Response) {
         const { body: data } = req;
-        const updatePromises = Promise.all(
+        const updatePromises = await Promise.all(
             // eslint-disable-next-line @typescript-eslint/promise-function-async
             data.map((rawMaterial: any): Promise<any> => {
                 return this.prisma.rawMaterial.updateMany({
