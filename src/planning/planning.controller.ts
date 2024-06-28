@@ -705,7 +705,7 @@ export class PlanningController {
     }
 
     async syncStrocksFromOlimpoApi(req: Request, res: Response) {
-        const { data } = req.body;
+        const { body: data } = req;
         const updatePromises = Promise.all(
             // eslint-disable-next-line @typescript-eslint/promise-function-async
             data.map((rawMaterial: any): Promise<any> => {
