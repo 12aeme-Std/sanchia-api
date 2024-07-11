@@ -79,6 +79,8 @@ export class RecipeService {
 
                         return tx.resourceOnRecipe.create({
                             data: {
+                                requiredMaterial:
+                                    materialOnRecipe.requiredMaterial,
                                 rawMaterial: {
                                     connect: {
                                         id: material.id,
@@ -113,7 +115,7 @@ export class RecipeService {
                 data: {
                     name: data.name,
                     description: data.description,
-                    quantity: data.quantity,
+                    quantity: data?.quantity ?? 0,
                     type: data.type,
                     parentId,
                 },
@@ -168,6 +170,8 @@ export class RecipeService {
 
                         return tx.resourceOnRecipe.create({
                             data: {
+                                requiredMaterial:
+                                    materialOnRecipe.requiredMaterial,
                                 rawMaterial: {
                                     connect: {
                                         id: material.id,

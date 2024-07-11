@@ -620,6 +620,7 @@ enum RecipeType {
   FINAL_PRODUCT
   ASSEMBLY_PRODUCT
   MIXTURE
+  RAW_MATERIAL
 
   @@map("recipe_types")
 }

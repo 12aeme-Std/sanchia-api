@@ -7,6 +7,6 @@ export interface CreateRecipeDto {
     manufactureProductId: number;
     materials: Array<{
         id: number;
-        quantity: number;
+        requiredMaterial: number;
     }>;
 }
