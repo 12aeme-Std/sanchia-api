@@ -7,7 +7,7 @@ export const CreateRecipeSchema = Joi.object({
     quantity: Joi.number().required(),
     materials: Joi.array().items({
         id: Joi.number().required(),
-        quantity: Joi.number().required(),
+        requiredMaterial: Joi.number().required(),
     }),
 });
 
@@ -17,6 +17,6 @@ export const UpdateRecipeSchema = Joi.object({
     quantity: Joi.number().optional(),
     materials: Joi.array().items({
         id: Joi.number().optional(),
-        quantity: Joi.number().optional(),
+        requiredMaterial: Joi.number().optional(),
     }),
 });
