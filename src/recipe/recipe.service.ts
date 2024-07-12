@@ -22,6 +22,7 @@ export class RecipeService {
             const recipe = await tx.recipe.create({
                 data: {
                     name: data.name,
+                    manufactureProductId: data.manufactureProductId,
                     description: data.description,
                     quantity: data.quantity,
                     type: data.type,
@@ -73,7 +74,7 @@ export class RecipeService {
                             .catch(() => {
                                 throw new HttpError(
                                     404,
-                                    `Mixture ${materialOnRecipe.id} does not exists`
+                                    `Material ${materialOnRecipe.id} does not exists`
                                 );
                             });
 
@@ -114,6 +115,7 @@ export class RecipeService {
             const recipe = await tx.recipe.create({
                 data: {
                     name: data.name,
+                    manufactureProductId: data.manufactureProductId,
                     description: data.description,
                     quantity: data?.quantity ?? 0,
                     type: data.type,
