@@ -494,7 +494,11 @@ model Planning {
 model PlanningSpec {
   id                 Int     @id @default(autoincrement())
   isMultipleSchedule Boolean @default(false) @map("is_multiple_schedule")
-  responsibleName    String  @map("responsible_name")
+
+  supervisor   MachineManager? @relation(fields: [supervisorId], references: [id])
+  supervisorId Int?            @map("supervisor_id")
+
+  operators String? @map("operators")
 
   manufactureMachine   ManufactureMachine @relation(fields: [manufactureMachineId], references: [id])
   manufactureMachineId Int                @map("manufacture_machine_id")
@@ -546,6 +550,24 @@ model ProductionSpec {
   updatedAt DateTime @updatedAt() @map("updated_at")
 
   @@map("production_spec")
+}
+
+model MachineManager {
+  id   Int                @id @default(autoincrement())
+  name String
+  kind MachineManagerType
+
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt() @map("updated_at")
+  PlanningSpec PlanningSpec[]
+
+  @@map("machine_manager")
+}
+
+enum MachineManagerType {
+  SUPERVISOR
+  QUALITY
+  OPERATOR
 }
 
 enum PlanningStatus {
