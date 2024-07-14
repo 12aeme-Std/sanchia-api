@@ -14,6 +14,7 @@ import warehouseMovementRouter from '@warehouse-movement/warehouse-movement.rout
 import cartRouter from '@cart/cart.router';
 import orderRouter from '@order/order.router';
 import planningRouter from '@planning/planning.router';
+import machineManagerRouter from '@machine-manager/machine-manager.router';
 
 const router = Router();
 
@@ -32,5 +33,6 @@ router.use('/warehouse-movement', warehouseMovementRouter);
 router.use('/cart', cartRouter);
 router.use('/order', orderRouter);
 router.use('/plannings', planningRouter);
+router.use('/machine-managers', machineManagerRouter);
 
 export default router;

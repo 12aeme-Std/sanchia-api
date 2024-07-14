@@ -29,7 +29,8 @@
             "@middlewares/*": ["./src/middlewares/*"],
             "@cart/*": ["./src/cart/*"],
             "@order/*": ["./src/order/*"],
-            "@planning/*": ["./src/planning/*"]
+            "@planning/*": ["./src/planning/*"],
+            "@machine-manager/*": ["./src/machine-manager/*"]
         }
     }
 }
