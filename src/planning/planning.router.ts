@@ -25,13 +25,15 @@ router.get(
     planningController.syncRecipes.bind(planningController)
 );
 
+router.get('/sync-aux', planningController.syncOlimpo.bind(planningController));
+
 router.get('/', planningController.getPlans.bind(planningController));
 router.get('/:id', planningController.getSinglePlan.bind(planningController));
 router.post('/', planningController.create.bind(planningController));
 
 router.put(
     '/sync-raw-materials',
-    planningController.syncStrocksFromOlimpoApi.bind(planningController)
+    planningController.syncStocksFromOlimpoApi.bind(planningController)
 );
 
 router.get(

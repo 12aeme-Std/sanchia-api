@@ -704,7 +704,7 @@ export class PlanningController {
         }
     }
 
-    async syncStrocksFromOlimpoApi(req: Request, res: Response) {
+    async syncStocksFromOlimpoApi(req: Request, res: Response) {
         const { body: data } = req;
         const updatePromises = await Promise.all(
             data.map(async (rawMaterial: any): Promise<any> => {
@@ -715,6 +715,297 @@ export class PlanningController {
             })
         );
 
-        return updatePromises;
+        return res.send({ updatePromises });
+    }
+
+    async syncAux(req: Request, res: Response) {
+        try {
+            await sql.connect({
+                user: 'olimporeader',
+                password: 'olimporeader',
+                database: 'master',
+                server: 'sanchia.bitconsultores.net',
+                port: 2034,
+                pool: {
+                    max: 10,
+                    min: 0,
+                    idleTimeoutMillis: 30000,
+                },
+                options: {
+                    encrypt: false,
+                    trustServerCertificate: false,
+                },
+            });
+
+            const result = await sql.query`
+      SELECT 
+          CP.cprNombre as [categoria],
+          PR.proCodigo AS [codigoProducto],
+          PR.proNombre As [nombreProducto],
+          MT.proCodigo AS [codigoMaterial],
+          MT.proNombre AS [nombreMaterial],
+          PR.cprId as [idCategorias],
+          MXP.*
+      FROM 
+          olComun.dbo.MaterialesXProducto MXP
+      LEFT JOIN olComun.dbo.Productos PR WITH (NOLOCK) on MXP.proId = PR.proId
+      LEFT JOIN olComun.dbo.Productos MT WITH (NOLOCK) on MXP.proIdMaterial  = MT.proId
+      LEFT JOIN olComun.dbo.CategoriasProductos CP WITH (NOLOCK) on CP.cprId = MT.cprId
+      WHERE MT.cprId in (2580, 2627);
+      `;
+            const newDataFromOlimpo = result.recordset;
+            const creationData: any[] = [];
+            const recipes = await this.prisma.recipe.findMany({
+                where: {
+                    manufactureProduct: { olimId: { not: null } },
+                    manufactureProductId: { not: null },
+                },
+                include: { manufactureProduct: true },
+            });
+
+            const productsWRecipeWResources: any = [];
+            recipes.forEach((recipe) => {
+                const parcedRecipe = newDataFromOlimpo.filter(
+                    (chargeAndHand) =>
+                        chargeAndHand.proId ===
+                        recipe.manufactureProduct?.olimId
+                );
+                const recipeResources = parcedRecipe.map((res) => {
+                    return {
+                        recipeId: recipe.id,
+                        rawMaterialId:
+                            res.nombreMaterial ===
+                            'Mano de Obra Directa Maquina'
+                                ? 176
+                                : 177,
+                        requiredMaterial: res.mxprCantidad,
+                    };
+                });
+                productsWRecipeWResources.push(...recipeResources);
+            });
+            const createResources =
+                await this.prisma.resourceOnRecipe.createManyAndReturn({
+                    data: productsWRecipeWResources,
+                });
+
+            res.send({ createResources });
+        } catch (error) {
+            res.send({ error });
+        }
+    }
+
+    /*
+      1. Revisar productos nuevos - Done
+      2. Revisar por materiales nuevos - Done
+      3. Crear recetas
+    */
+    async syncOlimpo(req: Request, res: Response) {
+        try {
+            await sql.connect({
+                user: 'olimporeader',
+                password: 'olimporeader',
+                database: 'master',
+                server: 'sanchia.bitconsultores.net',
+                port: 2034,
+                pool: {
+                    max: 10,
+                    min: 0,
+                    idleTimeoutMillis: 30000,
+                },
+                options: {
+                    encrypt: false,
+                    trustServerCertificate: false,
+                },
+            });
+
+            const result = await sql.query`
+SELECT
+    CP.cprNombre as [categoria],
+    PR.proId AS [olimId],
+    PR.proCodigo AS [codigoProducto],
+    PR.proNombre As [nombreProducto],
+    MT.proId AS [materialId],
+    MT.proCodigo AS [codigoMaterial],
+    MT.proNombre AS [nombreMaterial],
+    PR.cprId as [idCategorias],
+    MXP.*
+FROM 
+    olComun.dbo.MaterialesXProducto MXP
+LEFT JOIN olComun.dbo.Productos PR WITH (NOLOCK) on MXP.proId = PR.proId
+LEFT JOIN olComun.dbo.Productos MT WITH (NOLOCK) on MXP.proIdMaterial  = MT.proId
+LEFT JOIN olComun.dbo.CategoriasProductos CP WITH (NOLOCK) on CP.cprId = MT.cprId
+WHERE MT.cprId in (2647, 2645, 2595, 2644, 2648, 2580, 2627);
+`;
+            const olimpoProducts = result.recordset;
+            const productCreationData: any[] = [];
+            const materialCreationData: any[] = [];
+            let createProducts: any = null;
+            let createMaterials: any = null;
+
+            const dbProducts = await this.prisma.manufactureProduct.findMany();
+            const dbMaterials = await this.prisma.rawMaterial.findMany();
+
+            // Busca materiales nuevos
+            olimpoProducts.forEach((product: any) => {
+                // Condicion para si existe
+                const productDataIndex = productCreationData.findIndex(
+                    (data) => data.code === product.codigoProducto
+                );
+                const productCurrectSearchByCode = dbProducts.find(
+                    (dbProduct) => dbProduct.code === product.codigoProducto
+                );
+                const productCurrectSearchByOlimId = dbProducts.find(
+                    (dbProduct) => dbProduct.olimId === product.proId
+                );
+                const productCurrectSearchByName = dbMaterials.find(
+                    (dbProduct) => dbProduct.name === product.nombreProducto
+                );
+
+                const materialDataIndex = materialCreationData.findIndex(
+                    (data) => data.code === product.codigoMaterial
+                );
+                const materialCurrectSearch = dbMaterials.find(
+                    (dbMaterial) => dbMaterial.code === product.codigoMaterial
+                );
+                const materialCurrectSearchByName = dbMaterials.find(
+                    (dbMaterial) => dbMaterial.name === product.nombreMaterial
+                );
+
+                if (
+                    // No tiene que existir en su propio array
+                    productDataIndex < 0 &&
+                    // No tiene que ser encontrado por codigo
+                    !productCurrectSearchByCode &&
+                    // No tiene que ser encontrado por olimid
+                    !productCurrectSearchByOlimId &&
+                    !productCurrectSearchByName
+                ) {
+                    productCreationData.push({
+                        olimId: product.proId,
+                        code: product.codigoProducto,
+                        name: product.nombreProducto,
+                    });
+                }
+
+                if (
+                    materialDataIndex < 0 &&
+                    !materialCurrectSearch &&
+                    !materialCurrectSearchByName
+                ) {
+                    materialCreationData.push({
+                        olimId: product.proIdMaterial,
+                        code: product.codigoMaterial,
+                        name: product.nombreMaterial,
+                        category: product.categoria,
+                        stock: 0,
+                        warehouseId: 1,
+                    });
+                }
+            });
+
+            const groupedRecipes = _.groupBy(olimpoProducts, 'proId');
+
+            const possibleRecipes: any = [];
+            _.forEach(groupedRecipes, function (value, key) {
+                possibleRecipes.push(value);
+            });
+
+            // const data = groupedRecipes.entries[1];
+            // console.log(productCreationData);
+            if (productCreationData) {
+                // return res.send({ productCreationData, olimpoProducts });
+                createProducts =
+                    await this.prisma.manufactureProduct.createManyAndReturn({
+                        data: productCreationData,
+                    });
+            }
+            if (materialCreationData) {
+                createMaterials =
+                    await this.prisma.rawMaterial.createManyAndReturn({
+                        data: materialCreationData,
+                    });
+            }
+
+            /*
+              tengo que buscar los productos que no tienen receta, 
+              asi con su id, busco en el groupedRecipes, y puedo crear su receta
+            */
+            if (createProducts) {
+                // Se crean los productos junto con su receta
+                const manufactureProductWithoutRecipe =
+                    await this.prisma.manufactureProduct.findMany({
+                        where: { Recipe: { none: {} } },
+                    });
+
+                if (!manufactureProductWithoutRecipe) {
+                    return res.send({ message: 'nothing to update' });
+                }
+                // Refresh raw materials
+                const updatedRawMaterials =
+                    await this.prisma.rawMaterial.findMany();
+
+                const newRecipes = manufactureProductWithoutRecipe.map(
+                    async (mProduct) => {
+                        const rawData = groupedRecipes[
+                            mProduct?.olimId ?? 0
+                        ].map((rawRecipe) => {
+                            const currentMaterial = updatedRawMaterials.find(
+                                (rawMaterial) =>
+                                    rawMaterial.code ===
+                                    rawRecipe.codigoMaterial
+                            );
+                            if (!currentMaterial) return null;
+                            return {
+                                rawMaterialId: currentMaterial?.id,
+                                requiredMaterial: rawRecipe.mxprCantidad,
+                            };
+                        });
+                        const data = _.compact(rawData);
+                        if (!data) return null;
+
+                        return this.prisma.recipe.create({
+                            data: {
+                                name: `${mProduct.name} | Olimpo`,
+                                description: `Receta del producto: ${mProduct.name}`,
+                                quantity: 0,
+                                manufactureProduct: {
+                                    connect: {
+                                        id: mProduct.id,
+                                    },
+                                },
+                                resources: {
+                                    createMany: { data },
+                                },
+                            },
+                        });
+                    }
+                );
+
+                const createNewRecipes = await Promise.all(
+                    _.compact(newRecipes)
+                );
+                res.send({
+                    createProducts,
+                    createMaterials,
+                    createNewRecipes,
+                    newRecipes,
+                    manufactureProductWithoutRecipe,
+                    possibleRecipes,
+                    productCreationData,
+                    materialCreationData,
+                });
+            } else {
+                // Solo se crean los materiales nuevos
+                res.send({
+                    createProducts,
+                    createMaterials,
+                    possibleRecipes,
+                    productCreationData,
+                    materialCreationData,
+                });
+            }
+        } catch (error) {
+            res.send({ error });
+        }
     }
 }
