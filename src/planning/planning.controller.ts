@@ -262,6 +262,7 @@ export class PlanningController {
         });
 
         const finalData: Array<{
+            product: ManufactureProduct;
             rawMaterial: any; // (RawMaterial & { requiredMaterial: number }) | null;
             machines: any[]; // Array<ManufactureMachine & { quanity: number }> | null;
         }> = [];
@@ -282,7 +283,9 @@ export class PlanningController {
                         ...row.machine,
                         requiredMaterial: Number(
                             (
-                                ((schedule * 60 * 60) / row.production.cycles) *
+                                ((schedule * 60 * 60 -
+                                    row.production.leisureTime) /
+                                    row.production.cycles) *
                                 raw.requiredMaterial
                             ).toFixed(4)
                         ),
@@ -299,11 +302,13 @@ export class PlanningController {
                     // Es nuevo
                     const schedule = rawData?.schedule === 'AM' ? 13 : 11;
                     finalData.push({
+                        product: row.product,
                         rawMaterial: {
                             ...raw.rawMaterial,
                             totalRequiredMaterial: Number(
                                 (
-                                    ((schedule * 60 * 60) /
+                                    ((schedule * 60 * 60 -
+                                        row.production.leisureTime) /
                                         row.production.cycles) *
                                     raw.requiredMaterial
                                 ).toFixed(4)
@@ -314,7 +319,8 @@ export class PlanningController {
                                 ...row.machine,
                                 requiredMaterial: Number(
                                     (
-                                        ((schedule * 60 * 60) /
+                                        ((schedule * 60 * 60 -
+                                            row.production.leisureTime) /
                                             row.production.cycles) *
                                         raw.requiredMaterial
                                     ).toFixed(4)
