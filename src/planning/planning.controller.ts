@@ -7,6 +7,7 @@ import {
     RawMaterial,
     Recipe,
     ResourceOnRecipe,
+    ManufactureProduct
     Prisma,
 } from '@prisma/client';
 import sql, { connect } from 'mssql';
@@ -180,7 +181,8 @@ export class PlanningController {
                             include: {
                                 ProductionSpec: {
                                     include: {
-                                        recipe: {
+                                      manufactureProduct: true,
+                                      recipe: {
                                             include: {
                                                 resources: {
                                                     include: {
@@ -196,6 +198,7 @@ export class PlanningController {
                         manufactureMachine: true,
                         ProductionSpec: {
                             include: {
+                                manufactureProduct: true,
                                 recipe: {
                                     include: {
                                         resources: {
@@ -228,6 +231,7 @@ export class PlanningController {
                   >
                 | undefined;
             production: ProductionSpec;
+            product: ManufactureProduct
         }> = [];
 
         const rawMaterialsAndMachines: any = [];
@@ -239,6 +243,7 @@ export class PlanningController {
                             machine: planSpec.manufactureMachine,
                             resources: prodSpec.recipe?.resources,
                             production: prodSpec,
+                            product: prodSpec.manufactureProduct as ManufactureProduct,
                         });
                     });
                 });
@@ -248,6 +253,7 @@ export class PlanningController {
                         machine: planSpec.manufactureMachine,
                         resources: prodSpec.recipe?.resources,
                         production: prodSpec,
+                        product: prodSpec.manufactureProduct as ManufactureProduct,
                     });
                 });
             }
