@@ -57,6 +57,7 @@ export class PlanningController {
         const planningSpecs = await this.prisma.planningSpec.findMany({
             where: { planningId: Number(req.params.id) },
             include: {
+                supervisor: true,
                 manufactureMachine: true,
                 PlanningSchedule: {
                     include: {

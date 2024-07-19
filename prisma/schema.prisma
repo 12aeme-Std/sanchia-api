@@ -530,9 +530,10 @@ model PlanningSchedule {
 }
 
 model ProductionSpec {
-  id          Int @id @default(autoincrement())
-  leisureTime Int @map("leisure_time")
-  cycles      Int
+  id                   Int @id @default(autoincrement())
+  leisureTime          Int @map("leisure_time")
+  cycles               Int
+  productionEstimation Int @default(0) @map("production_estimation")
 
   manufactureProduct   ManufactureProduct? @relation(fields: [manufactureProductId], references: [id])
   manufactureProductId Int?                @map("manufacture_product_id")
