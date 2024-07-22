@@ -64,7 +64,13 @@ export class PlanningController {
                         ProductionSpec: {
                             include: {
                                 manufactureProduct: true,
-                                recipe: { include: { resources: true } },
+                                recipe: {
+                                    include: {
+                                        resources: {
+                                            include: { rawMaterial: true },
+                                        },
+                                    },
+                                },
                             },
                         },
                     },
@@ -72,7 +78,11 @@ export class PlanningController {
                 ProductionSpec: {
                     include: {
                         manufactureProduct: true,
-                        recipe: { include: { resources: true } },
+                        recipe: {
+                            include: {
+                                resources: { include: { rawMaterial: true } },
+                            },
+                        },
                     },
                 },
             },
