@@ -5,7 +5,11 @@ import { PlanningController } from './planning.controller';
 const router = Router();
 const planningController = new PlanningController();
 
-// router.use(passport.authenticate('jwt', { session: false }));
+router.get(
+    '/active-plan',
+    planningController.getActivePlan.bind(planningController)
+);
+
 router.get(
     '/sync-materials',
     planningController.syncMaterials.bind(planningController)
@@ -91,6 +95,17 @@ router.get(
     planningController.getProductionByPlanSpecOrSchedule.bind(
         planningController
     )
+);
+
+// Planning extras
+router.put(
+    '/:id/status',
+    planningController.updatePlanningStatus.bind(planningController)
+);
+
+router.get(
+    '/:id/production-plans',
+    planningController.getProductionPlansByPlanning.bind(planningController)
 );
 
 export default router;

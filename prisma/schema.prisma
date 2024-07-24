@@ -227,6 +227,7 @@ model Warehouse {
   warehouseMovementOrigins      WarehouseMovement[] @relation("origin")
   warehouseMovementDestinations WarehouseMovement[] @relation("destination")
   manufactureResult             ManufactureResult[]
+  ProductionResults             ProductionResults[]
 
   @@map("warehouse")
 }
@@ -285,9 +286,10 @@ model ManufactureMachine {
   registeredAt DateTime @default(now()) @map("registered_at")
   name         String   @unique
 
-  movements    WarehouseMovement[]
-  manufactures Manufacture[]
-  PlanningSpec PlanningSpec[]
+  movements      WarehouseMovement[]
+  manufactures   Manufacture[]
+  PlanningSpec   PlanningSpec[]
+  ProductionPlan ProductionPlan[]
 
   @@map("manufacture_machine")
 }
@@ -389,12 +391,13 @@ model ResourceOnRecipe {
 }
 
 model RawMaterial {
-  id       Int     @id @default(autoincrement())
-  name     String  @unique
-  stock    Int     @default(0)
-  category String?
-  code     String?
-  olimId   Int?    @unique
+  id               Int     @id @default(autoincrement())
+  name             String  @unique
+  stock            Int     @default(0)
+  alternativeStock Int     @default(0)
+  category         String?
+  code             String?
+  olimId           Int?    @unique
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt() @map("updated_at")
@@ -473,20 +476,23 @@ model ManufactureProduct {
   manufactureId  Int?             @map("manufacture_id ")
   ProductionSpec ProductionSpec[]
   Recipe         Recipe[]
+  ProductionPlan ProductionPlan[]
 
   @@map("product_result")
 }
 
 //Plantifications
 model Planning {
-  id           Int             @id @default(autoincrement())
-  code         String
-  schedule     String
-  status       PlanningStatus?
-  PlanningSpec PlanningSpec[]
+  id            Int            @id @default(autoincrement())
+  code          String
+  schedule      String
+  status        PlanningStatus @default(value: INACTIVE)
+  hasProduction Boolean        @default(false) @map("has_production")
+  PlanningSpec  PlanningSpec[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt() @map("updated_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt() @map("updated_at")
+  ProductionPlan ProductionPlan[]
 
   @@map("planning")
 }
@@ -547,8 +553,9 @@ model ProductionSpec {
   recipe   Recipe? @relation(fields: [recipeId], references: [id])
   recipeId Int?    @map("recipe_id")
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt() @map("updated_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt() @map("updated_at")
+  ProductionPlan ProductionPlan[]
 
   @@map("production_spec")
 }
@@ -563,6 +570,58 @@ model MachineManager {
   PlanningSpec PlanningSpec[]
 
   @@map("machine_manager")
+}
+
+model ProductionPlan {
+  id         Int     @id @default(autoincrement())
+  isComplete Boolean @default(false) @map("is_complete")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+
+  planning   Planning @relation(fields: [planningId], references: [id])
+  planningId Int      @map("planning_id")
+
+  manufactureProduct   ManufactureProduct? @relation(fields: [manufactureProductId], references: [id])
+  manufactureProductId Int?                @map("manufacture_product_id")
+
+  manufactureMachine   ManufactureMachine @relation(fields: [manufactureMachineId], references: [id])
+  manufactureMachineId Int                @map("manufacture_machine_id")
+
+  productionSpec   ProductionSpec @relation(fields: [productionSpecId], references: [id])
+  productionSpecId Int            @map("planning_spec_id")
+
+  productionResults ProductionResults[]
+
+  @@map("production_plan")
+}
+
+model ProductionResults {
+  id          Int                     @id @default(autoincrement())
+  pieces      Int
+  waste       Int?                    @default(0)
+  burr        Int?                    @default(0)
+  status      ProductionResultsStatus @default(value: PENDING)
+  errorMesage String?                 @map("error_message")
+
+  productionPlan   ProductionPlan @relation(fields: [productionPlanId], references: [id])
+  productionPlanId Int            @map("production_plan_id")
+
+  warehouse   Warehouse? @relation(fields: [warehouseId], references: [id])
+  warehouseId Int?       @map("warehouse_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+
+  @@map("production_results")
+}
+
+enum ProductionResultsStatus {
+  PENDING
+  SYNC
+  ERROR
+
+  @@map("production_results_status")
 }
 
 enum MachineManagerType {

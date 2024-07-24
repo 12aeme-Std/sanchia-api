@@ -8,6 +8,7 @@ import {
     Recipe,
     ResourceOnRecipe,
     ManufactureProduct,
+    PlanningStatus,
     Prisma,
 } from '@prisma/client';
 import sql, { connect } from 'mssql';
@@ -145,14 +146,18 @@ export class PlanningController {
     }
 
     async updateProductionSpec(req: Request, res: Response) {
-        const { pid } = req.params;
-        delete req.body.id;
-        const productionSpec = await this.prisma.productionSpec.update({
-            data: req.body,
-            where: { id: Number(pid) },
-        });
+        // const { pid } = req.params;
+        try {
+            delete req.body.id;
+            const productionSpec = await this.prisma.productionSpec.update({
+                data: req.body,
+                where: { id: Number(req.params.pid) },
+            });
 
-        return res.send(productionSpec);
+            return res.send(productionSpec);
+        } catch (error) {
+            return res.send({ error });
+        }
     }
 
     async deleteProductionSpec(req: Request, res: Response) {
@@ -1032,5 +1037,175 @@ WHERE MT.cprId in (2647, 2645, 2595, 2644, 2648, 2580, 2627);
         } catch (error) {
             res.send({ error });
         }
+    }
+
+    async getActivePlan(req: Request, res: Response) {
+        const activePlan = await this.prisma.planning.findFirst({
+            where: { status: PlanningStatus.ACTIVE },
+        });
+        return res.send(activePlan);
+    }
+
+    async updatePlanningStatus(req: Request, res: Response) {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        // Si estoy mandando a activar una planificacion
+        if (status === PlanningStatus.ACTIVE) {
+            /*
+              1. Reviso si existe una previa activada, si no hay ninguna activa, activo esta, si hay una, la desativo y prendo esta
+              2. Reviso si tiene ProductionPlans, si tiene, solo cambio el estado, sino, los creo
+            */
+
+            const currentActivePlan = await this.prisma.planning.findFirst({
+                where: {
+                    status: PlanningStatus.ACTIVE,
+                    id: { not: Number(id) },
+                },
+            });
+
+            const data = [];
+            if (currentActivePlan) {
+                // Existe uno activo
+                const setPlanInactive = await this.prisma.planning.update({
+                    where: { id: currentActivePlan.id },
+                    data: { status: PlanningStatus.INACTIVE },
+                });
+                data.push(setPlanInactive);
+
+                const setNewPlanActive = await this.prisma.planning.update({
+                    where: { id: Number(id) },
+                    data: { status: PlanningStatus.ACTIVE },
+                });
+                data.push(setNewPlanActive);
+            } else {
+                const setPlanActive = await this.prisma.planning.update({
+                    where: { id: Number(id) },
+                    data: { status: PlanningStatus.ACTIVE },
+                });
+                data.push(setPlanActive);
+            }
+
+            // Check the productionPlans
+            const productionPlans = await this.prisma.productionPlan.findMany({
+                where: { planningId: Number(id) },
+            });
+
+            if (productionPlans.length === 0) {
+                // Crearlos, no tiene else, por que si tiene no nos importa
+                const currentPlanning = await this.prisma.planningSpec.findMany(
+                    {
+                        where: { planningId: Number(id) },
+                        include: {
+                            PlanningSchedule: {
+                                include: {
+                                    ProductionSpec: {
+                                        include: {
+                                            manufactureProduct: true,
+                                        },
+                                    },
+                                },
+                            },
+                            ProductionSpec: {
+                                include: {
+                                    manufactureProduct: true,
+                                },
+                            },
+                        },
+                    }
+                );
+
+                const productionPlanningCreation = currentPlanning.map(
+                    (planSpec) => {
+                        if (planSpec.isMultipleSchedule) {
+                            // Multiples por maquina
+                            return planSpec.PlanningSchedule.map(
+                                (planSchedule) => {
+                                    const {
+                                        ProductionSpec: [spec],
+                                    } = planSchedule;
+                                    return {
+                                        planningId: Number(planSpec.planningId),
+                                        manufactureProductId: Number(
+                                            spec.manufactureProductId
+                                        ),
+                                        manufactureMachineId: Number(
+                                            planSpec.manufactureMachineId
+                                        ),
+                                        productionSpecId: Number(spec.id),
+                                    };
+                                }
+                            );
+                        } else {
+                            // Solo uno
+                            const [fIndexProductionSpec] =
+                                planSpec.ProductionSpec;
+                            return {
+                                planningId: Number(planSpec.planningId),
+                                manufactureProductId: Number(
+                                    fIndexProductionSpec.manufactureProductId
+                                ),
+                                manufactureMachineId: Number(
+                                    planSpec.manufactureMachineId
+                                ),
+                                productionSpecId: Number(
+                                    fIndexProductionSpec.id
+                                ),
+                            };
+                        }
+                    }
+                ) as Prisma.ProductionPlanCreateManyInput[];
+                const createProductionPlans =
+                    await this.prisma.productionPlan.createMany({
+                        data: productionPlanningCreation,
+                    });
+                data.push(createProductionPlans);
+            }
+
+            return res.send({
+                message: 'Plan was set as active',
+                data,
+            });
+        } else if (status === PlanningStatus.INACTIVE) {
+            const setCurrentPlanInactive = await this.prisma.planning.update({
+                where: { id: Number(id) },
+                data: { status: PlanningStatus.INACTIVE },
+            });
+
+            return res.send({
+                message: 'Plan was set as inactive',
+                data: [setCurrentPlanInactive],
+            });
+        }
+        return res.status(400).send({
+            message: 'status is not supported',
+            data: [],
+        });
+    }
+
+    async getProductionPlansByPlanning(req: Request, res: Response) {
+        const { id: planId } = req.params;
+        const productionPlans = await this.prisma.productionPlan.findMany({
+            where: { planningId: Number(planId) },
+            include: {
+                manufactureMachine: true,
+                manufactureProduct: true,
+                productionResults: true,
+                productionSpec: {
+                    include: {
+                        recipe: {
+                            include: {
+                                resources: {
+                                    include: {
+                                        rawMaterial: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        return res.send(productionPlans);
     }
 }

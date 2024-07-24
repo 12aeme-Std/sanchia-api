@@ -15,6 +15,8 @@ import cartRouter from '@cart/cart.router';
 import orderRouter from '@order/order.router';
 import planningRouter from '@planning/planning.router';
 import machineManagerRouter from '@machine-manager/machine-manager.router';
+import productionPlanRouter from '@production-plan/production-plan.router';
+import productionResultsRouter from '@production-results/production-results.router';
 
 const router = Router();
 
@@ -34,5 +36,7 @@ router.use('/cart', cartRouter);
 router.use('/order', orderRouter);
 router.use('/plannings', planningRouter);
 router.use('/machine-managers', machineManagerRouter);
+router.use('/production-plans', productionPlanRouter);
+router.use('/production-results', productionResultsRouter);
 
 export default router;

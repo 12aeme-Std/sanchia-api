@@ -30,7 +30,9 @@
             "@cart/*": ["./src/cart/*"],
             "@order/*": ["./src/order/*"],
             "@planning/*": ["./src/planning/*"],
-            "@machine-manager/*": ["./src/machine-manager/*"]
+            "@machine-manager/*": ["./src/machine-manager/*"],
+            "@production-plan/*": ["./src/production-plan/*"],
+            "@production-results/*": ["./src/production-results/*"]
         }
     }
 }
