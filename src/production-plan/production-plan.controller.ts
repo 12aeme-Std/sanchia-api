@@ -8,5 +8,19 @@ export class ProductionPlanController {
         this.prisma = new PrismaClient();
     }
 
-    async methodX(req: Request, res: Response) {}
+    async getResultsByProductionPlan(req: Request, res: Response) {
+        const { id } = req.params;
+        const results = await this.prisma.productionResults.findMany({
+            where: { productionPlanId: Number(id) },
+        });
+        return res.send(results);
+    }
+
+    async createResult(req: Request, res: Response) {
+        const { id } = req.params;
+        const newResult = await this.prisma.productionResults.create({
+            data: { productionPlanId: Number(id), ...req.body },
+        });
+        return res.send(newResult);
+    }
 }
