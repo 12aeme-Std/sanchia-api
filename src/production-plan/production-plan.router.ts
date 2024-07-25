@@ -6,8 +6,15 @@ const productionPlanController = new ProductionPlanController();
 
 // router.use(passport.authenticate('jwt', { session: false }));
 router.get(
-    '/sync-materials',
-    productionPlanController.methodX.bind(productionPlanController)
+    '/:id/results',
+    productionPlanController.getResultsByProductionPlan.bind(
+        productionPlanController
+    )
+);
+
+router.post(
+    '/:id/results',
+    productionPlanController.createResult.bind(productionPlanController)
 );
 
 export default router;
