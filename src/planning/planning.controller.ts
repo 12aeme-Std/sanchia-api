@@ -14,6 +14,7 @@ import {
 import sql, { connect } from 'mssql';
 import { CreateRawMaterialDto } from '@raw-material/dtos/create-raw-material.dto';
 import _ from 'lodash';
+import axios from 'axios';
 
 export class PlanningController {
     private readonly prisma: PrismaClient;
@@ -231,6 +232,21 @@ export class PlanningController {
             },
             where: { id: Number(req.params.id) },
         });
+        const { data: productionChargesRawMaterial }: { data: any[] } =
+            await axios.request({
+                maxBodyLength: Infinity,
+                url: 'http://apisanchia.bitconsultores.net/olimpows/inventario/pull',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization:
+                        'Bearer MslSazTz1XvFsMb443zoQnt0io8qtVcLwTESvTCz4uVFXd7L1fnNi9Fz9vJW',
+                },
+                data: {
+                    Ubicacion: 'UBI07PRODUCCION',
+                    IdComercio: 'TPRC006',
+                },
+            });
 
         const maquinas =
             rawData?.PlanningSpec.map((planSpec) => {
@@ -321,6 +337,11 @@ export class PlanningController {
                         product: row.product,
                         rawMaterial: {
                             ...raw.rawMaterial,
+                            alternativeStock: productionChargesRawMaterial.find(
+                                (aRawMaterial) =>
+                                    aRawMaterial.Codigo ===
+                                    raw.rawMaterial?.code
+                            )?.Saldo,
                             totalRequiredMaterial: Number(
                                 (
                                     ((schedule * 60 * 60 -
@@ -1127,7 +1148,7 @@ WHERE MT.cprId in (2647, 2645, 2595, 2644, 2648, 2580, 2627);
                                     return {
                                         planningId: Number(planSpec.planningId),
                                         manufactureProductId: Number(
-                                            spec.manufactureProductId
+                                            spec?.manufactureProductId
                                         ),
                                         manufactureMachineId: Number(
                                             planSpec.manufactureMachineId
