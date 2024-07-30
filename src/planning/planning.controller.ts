@@ -1209,11 +1209,13 @@ WHERE MT.cprId in (2647, 2645, 2595, 2644, 2648, 2580, 2627);
         const productionPlans = await this.prisma.productionPlan.findMany({
             where: { planningId: Number(planId) },
             include: {
+                planning: true,
                 manufactureMachine: true,
                 manufactureProduct: true,
                 productionResults: true,
                 productionSpec: {
                     include: {
+                        planningSpec: { include: { supervisor: true } },
                         recipe: {
                             include: {
                                 resources: {
