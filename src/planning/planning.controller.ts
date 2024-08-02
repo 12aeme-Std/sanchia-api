@@ -233,22 +233,22 @@ export class PlanningController {
                 },
                 where: { id: Number(req.params.id) },
             });
-            // const { data: productionChargesRawMaterial }: { data: any[] } =
-            //     await axios.request({
-            //         maxBodyLength: Infinity,
-            //         url: 'http://apisanchia.bitconsultores.net/olimpows/inventario/pull',
-            //         method: 'POST',
-            //         headers: {
-            //             'Content-Type': 'application/json',
-            //             Authorization:
-            //                 'Bearer MslSazTz1XvFsMb443zoQnt0io8qtVcLwTESvTCz4uVFXd7L1fnNi9Fz9vJW',
-            //         },
-            //         data: {
-            //             Ubicacion: 'UBI07PRODUCCION',
-            //             IdComercio: 'TPRC006',
-            //         },
-            //     });
-            const productionChargesRawMaterial: any[] = [];
+            const { data: productionChargesRawMaterial }: { data: any[] } =
+                await axios.request({
+                    maxBodyLength: Infinity,
+                    url: 'http://apisanchia.bitconsultores.net/olimpows/inventario/pull',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization:
+                            'Bearer MslSazTz1XvFsMb443zoQnt0io8qtVcLwTESvTCz4uVFXd7L1fnNi9Fz9vJW',
+                    },
+                    data: {
+                        Ubicacion: 'UBI07PRODUCCION',
+                        IdComercio: 'TPRC006',
+                    },
+                });
+            // const productionChargesRawMaterial: any[] = [];
 
             const maquinas =
                 rawData?.PlanningSpec.map((planSpec) => {
