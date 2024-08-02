@@ -190,20 +190,22 @@ export class PlanningController {
     }
 
     async getReportData(req: Request, res: Response) {
-        const rawData = await this.prisma.planning.findFirst({
-            include: {
-                PlanningSpec: {
-                    include: {
-                        PlanningSchedule: {
-                            include: {
-                                ProductionSpec: {
-                                    include: {
-                                        manufactureProduct: true,
-                                        recipe: {
-                                            include: {
-                                                resources: {
-                                                    include: {
-                                                        rawMaterial: true,
+        try {
+            const rawData = await this.prisma.planning.findFirst({
+                include: {
+                    PlanningSpec: {
+                        include: {
+                            PlanningSchedule: {
+                                include: {
+                                    ProductionSpec: {
+                                        include: {
+                                            manufactureProduct: true,
+                                            recipe: {
+                                                include: {
+                                                    resources: {
+                                                        include: {
+                                                            rawMaterial: true,
+                                                        },
                                                     },
                                                 },
                                             },
@@ -211,16 +213,16 @@ export class PlanningController {
                                     },
                                 },
                             },
-                        },
-                        manufactureMachine: true,
-                        ProductionSpec: {
-                            include: {
-                                manufactureProduct: true,
-                                recipe: {
-                                    include: {
-                                        resources: {
-                                            include: {
-                                                rawMaterial: true,
+                            manufactureMachine: true,
+                            ProductionSpec: {
+                                include: {
+                                    manufactureProduct: true,
+                                    recipe: {
+                                        include: {
+                                            resources: {
+                                                include: {
+                                                    rawMaterial: true,
+                                                },
                                             },
                                         },
                                     },
@@ -229,48 +231,59 @@ export class PlanningController {
                         },
                     },
                 },
-            },
-            where: { id: Number(req.params.id) },
-        });
-        const { data: productionChargesRawMaterial }: { data: any[] } =
-            await axios.request({
-                maxBodyLength: Infinity,
-                url: 'http://apisanchia.bitconsultores.net/olimpows/inventario/pull',
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization:
-                        'Bearer MslSazTz1XvFsMb443zoQnt0io8qtVcLwTESvTCz4uVFXd7L1fnNi9Fz9vJW',
-                },
-                data: {
-                    Ubicacion: 'UBI07PRODUCCION',
-                    IdComercio: 'TPRC006',
-                },
+                where: { id: Number(req.params.id) },
             });
+            // const { data: productionChargesRawMaterial }: { data: any[] } =
+            //     await axios.request({
+            //         maxBodyLength: Infinity,
+            //         url: 'http://apisanchia.bitconsultores.net/olimpows/inventario/pull',
+            //         method: 'POST',
+            //         headers: {
+            //             'Content-Type': 'application/json',
+            //             Authorization:
+            //                 'Bearer MslSazTz1XvFsMb443zoQnt0io8qtVcLwTESvTCz4uVFXd7L1fnNi9Fz9vJW',
+            //         },
+            //         data: {
+            //             Ubicacion: 'UBI07PRODUCCION',
+            //             IdComercio: 'TPRC006',
+            //         },
+            //     });
+            const productionChargesRawMaterial: any[] = [];
 
-        const maquinas =
-            rawData?.PlanningSpec.map((planSpec) => {
-                return planSpec.manufactureMachine.name;
-            }) ?? [];
+            const maquinas =
+                rawData?.PlanningSpec.map((planSpec) => {
+                    return planSpec.manufactureMachine.name;
+                }) ?? [];
 
-        const resourcesOnMachines: Array<{
-            machine: ManufactureMachine;
-            resources:
-                | Array<
-                      ResourceOnRecipe & {
-                          rawMaterial: RawMaterial | null;
-                      }
-                  >
-                | undefined;
-            production: ProductionSpec;
-            product: ManufactureProduct;
-        }> = [];
+            const resourcesOnMachines: Array<{
+                machine: ManufactureMachine;
+                resources:
+                    | Array<
+                          ResourceOnRecipe & {
+                              rawMaterial: RawMaterial | null;
+                          }
+                      >
+                    | undefined;
+                production: ProductionSpec;
+                product: ManufactureProduct;
+            }> = [];
 
-        const rawMaterialsAndMachines: any = [];
-        rawData?.PlanningSpec.forEach((planSpec) => {
-            if (planSpec.isMultipleSchedule) {
-                planSpec.PlanningSchedule.forEach((plannSche) => {
-                    plannSche.ProductionSpec.forEach((prodSpec) => {
+            const rawMaterialsAndMachines: any = [];
+            rawData?.PlanningSpec.forEach((planSpec) => {
+                if (planSpec.isMultipleSchedule) {
+                    planSpec.PlanningSchedule.forEach((plannSche) => {
+                        plannSche.ProductionSpec.forEach((prodSpec) => {
+                            resourcesOnMachines.push({
+                                machine: planSpec.manufactureMachine,
+                                resources: prodSpec.recipe?.resources,
+                                production: prodSpec,
+                                product:
+                                    prodSpec.manufactureProduct as ManufactureProduct,
+                            });
+                        });
+                    });
+                } else {
+                    planSpec.ProductionSpec.forEach((prodSpec) => {
                         resourcesOnMachines.push({
                             machine: planSpec.manufactureMachine,
                             resources: prodSpec.recipe?.resources,
@@ -279,70 +292,30 @@ export class PlanningController {
                                 prodSpec.manufactureProduct as ManufactureProduct,
                         });
                     });
-                });
-            } else {
-                planSpec.ProductionSpec.forEach((prodSpec) => {
-                    resourcesOnMachines.push({
-                        machine: planSpec.manufactureMachine,
-                        resources: prodSpec.recipe?.resources,
-                        production: prodSpec,
-                        product:
-                            prodSpec.manufactureProduct as ManufactureProduct,
-                    });
-                });
-            }
-        });
+                }
+            });
 
-        const finalData: Array<{
-            product: ManufactureProduct;
-            rawMaterial: any; // (RawMaterial & { requiredMaterial: number }) | null;
-            machines: any[]; // Array<ManufactureMachine & { quanity: number }> | null;
-        }> = [];
+            const finalData: Array<{
+                product: ManufactureProduct;
+                rawMaterial: any; // (RawMaterial & { requiredMaterial: number }) | null;
+                machines: any[]; // Array<ManufactureMachine & { quanity: number }> | null;
+            }> = [];
 
-        resourcesOnMachines.forEach((row) => {
-            row.resources?.forEach((raw) => {
-                // Primero tengo que buscar el indice
-                // Separa primer insercion a segunda
-                const dataIndex = finalData.findIndex(
-                    (data) => data.rawMaterial.id === raw.rawMaterial?.id
-                );
+            resourcesOnMachines.forEach((row) => {
+                row.resources?.forEach((raw) => {
+                    // Primero tengo que buscar el indice
+                    // Separa primer insercion a segunda
+                    const dataIndex = finalData.findIndex(
+                        (data) => data.rawMaterial.id === raw.rawMaterial?.id
+                    );
 
-                if (dataIndex >= 0) {
-                    // Lo encontro
-                    const schedule = rawData?.schedule === 'AM' ? 13 : 11;
+                    if (dataIndex >= 0) {
+                        // Lo encontro
+                        const schedule = rawData?.schedule === 'AM' ? 13 : 11;
 
-                    finalData[dataIndex].machines.push({
-                        ...row.machine,
-                        requiredMaterial: Number(
-                            (
-                                ((schedule * 60 * 60 -
-                                    row.production.leisureTime) /
-                                    row.production.cycles) *
-                                raw.requiredMaterial
-                            ).toFixed(4)
-                        ),
-                    });
-
-                    finalData[dataIndex].rawMaterial.totalRequiredMaterial =
-                        Number(
-                            _.sumBy(
-                                finalData[dataIndex].machines,
-                                'requiredMaterial'
-                            ).toFixed(4)
-                        );
-                } else {
-                    // Es nuevo
-                    const schedule = rawData?.schedule === 'AM' ? 13 : 11;
-                    finalData.push({
-                        product: row.product,
-                        rawMaterial: {
-                            ...raw.rawMaterial,
-                            alternativeStock: productionChargesRawMaterial.find(
-                                (aRawMaterial) =>
-                                    aRawMaterial.Codigo ===
-                                    raw.rawMaterial?.code
-                            )?.Saldo,
-                            totalRequiredMaterial: Number(
+                        finalData[dataIndex].machines.push({
+                            ...row.machine,
+                            requiredMaterial: Number(
                                 (
                                     ((schedule * 60 * 60 -
                                         row.production.leisureTime) /
@@ -350,11 +323,29 @@ export class PlanningController {
                                     raw.requiredMaterial
                                 ).toFixed(4)
                             ),
-                        },
-                        machines: [
-                            {
-                                ...row.machine,
-                                requiredMaterial: Number(
+                        });
+
+                        finalData[dataIndex].rawMaterial.totalRequiredMaterial =
+                            Number(
+                                _.sumBy(
+                                    finalData[dataIndex].machines,
+                                    'requiredMaterial'
+                                ).toFixed(4)
+                            );
+                    } else {
+                        // Es nuevo
+                        const schedule = rawData?.schedule === 'AM' ? 13 : 11;
+                        finalData.push({
+                            product: row.product,
+                            rawMaterial: {
+                                ...raw.rawMaterial,
+                                alternativeStock:
+                                    productionChargesRawMaterial.find(
+                                        (aRawMaterial) =>
+                                            aRawMaterial.Codigo ===
+                                            raw.rawMaterial?.code
+                                    )?.Saldo,
+                                totalRequiredMaterial: Number(
                                     (
                                         ((schedule * 60 * 60 -
                                             row.production.leisureTime) /
@@ -363,16 +354,31 @@ export class PlanningController {
                                     ).toFixed(4)
                                 ),
                             },
-                        ],
-                    });
-                }
+                            machines: [
+                                {
+                                    ...row.machine,
+                                    requiredMaterial: Number(
+                                        (
+                                            ((schedule * 60 * 60 -
+                                                row.production.leisureTime) /
+                                                row.production.cycles) *
+                                            raw.requiredMaterial
+                                        ).toFixed(4)
+                                    ),
+                                },
+                            ],
+                        });
+                    }
+                });
             });
-        });
 
-        res.send({
-            maquinas,
-            rows: finalData,
-        });
+            return res.send({
+                maquinas,
+                rows: finalData,
+            });
+        } catch (error) {
+            return res.send({ error });
+        }
     }
 
     async syncMaterials(req: Request, res: Response) {
