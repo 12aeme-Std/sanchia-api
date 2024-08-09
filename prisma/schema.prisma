@@ -466,11 +466,12 @@ model ManufactureResult {
 }
 
 model ManufactureProduct {
-  id     Int                    @id @default(autoincrement())
-  name   String
-  type   ManufactureProductType @default(PRODUCT)
-  code   String?
-  olimId Int?                   @unique
+  id            Int                    @id @default(autoincrement())
+  name          String
+  type          ManufactureProductType @default(PRODUCT)
+  code          String?
+  olimId        Int?                   @unique
+  productWeight Int                    @default(0)
 
   manufacture    Manufacture?     @relation(fields: [manufactureId], references: [id])
   manufactureId  Int?             @map("manufacture_id ")
@@ -561,9 +562,10 @@ model ProductionSpec {
 }
 
 model MachineManager {
-  id   Int                @id @default(autoincrement())
-  name String
-  kind MachineManagerType
+  id      Int                @id @default(autoincrement())
+  name    String
+  kind    MachineManagerType
+  deleted Boolean            @default(false)
 
   createdAt    DateTime       @default(now()) @map("created_at")
   updatedAt    DateTime       @updatedAt() @map("updated_at")
@@ -591,7 +593,8 @@ model ProductionPlan {
   productionSpec   ProductionSpec @relation(fields: [productionSpecId], references: [id])
   productionSpecId Int            @map("planning_spec_id")
 
-  productionResults ProductionResults[]
+  productionResults  ProductionResults[]
+  ProductionIncident ProductionIncident[]
 
   @@map("production_plan")
 }
@@ -614,6 +617,21 @@ model ProductionResults {
   updatedAt DateTime @updatedAt() @map("updated_at")
 
   @@map("production_results")
+}
+
+model ProductionIncident {
+  id        Int       @id @default(autoincrement())
+  comment   String
+  startedAt DateTime?
+  endedAt   DateTime?
+
+  productionPlan   ProductionPlan @relation(fields: [productionPlanId], references: [id])
+  productionPlanId Int
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+
+  @@map("production_incident")
 }
 
 enum ProductionResultsStatus {
